@@ -1,54 +1,89 @@
-# React + TypeScript + Vite
+# BEC-Github
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+🚀 **BEC-Github** es un cliente GitHub restringido para gestionar contenido en **Bitcoin Educational Content**.  
 
-Currently, two official plugins are available:
+💡 **Proyecto en desarrollo** con **React + Vite + TailwindCSS** en el frontend y **Express + TypeScript** en el backend.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## Expanding the ESLint configuration
+## **📌 Requisitos**
+- **Node.js** `>=18`
+- **pnpm** (`npm install -g pnpm`)
+- **Git**
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## **📥 Instalación**
+### **1️⃣ Clonar el repositorio**
+```bash
+git clone https://github.com/TU_USUARIO/BEC-Github.git
+cd BEC-Github
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+### **2️⃣ Instalar dependencias**
+```bash
+pnpm install
 ```
+
+---
+
+## **🚀 Ejecución**
+### **1️⃣ Backend**
+```bash
+cd backend
+pnpm dev
+```
+🔹 Servidor Express en `4000`.
+
+### **2️⃣ Frontend**
+```bash
+pnpm dev
+```
+🔹 Cliente React en `5173`.
+
+---
+
+## **📂 Estructura**
+```bash
+BEC-Github/
+│── backend/        # Express + TypeScript
+│   ├── src/        # Código backend
+│   ├── .env        # Variables de entorno
+│── src/            # React + Vite
+│   ├── assets/     # Imágenes y recursos
+│   ├── components/ # Componentes
+│   ├── pages/      # Páginas
+│── public/         # Archivos estáticos
+│── README.md       # Documentación
+```
+
+---
+
+## **📌 Variables de entorno**
+Crear `.env` en `backend/`:
+```ini
+PORT=4000
+```
+
+---
+
+## **📌 Notas**
+- Si el backend no reconoce `cors`:
+  ```bash
+  pnpm add -D @types/cors
+  ```
+- Si TailwindCSS falla:
+  ```bash
+  pnpm install
+  ```
+
+---
+
+## **📌 Próximos pasos**
+🔹 **Autenticación con GitHub.**  
+🔹 **Interfaz para modificar archivos.**  
+🔹 **Automatización de Pull Requests.**  
+
+👨‍💻 **¡Contribuciones bienvenidas!** 🚀
+
+---

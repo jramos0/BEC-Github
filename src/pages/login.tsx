@@ -6,11 +6,11 @@ const Login = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white">
       {/* Logo Placeholder */}
       <div className="mb-6">
-      <img src={pbnLogo} alt="Plan B Network Logo" className="h-24 w-full" />
+      <img src={pbnLogo} alt="Plan B Network Logo" className="h-14 w-full" />
       </div>
 
       {/* Login Form */}
-      <div className="w-80 bg-gray-900 p-6 rounded-lg shadow-lg">
+      <div className="w-full bg-gray-900 p-6 rounded-lg shadow-lg">
         <h2 className="text-xl font-semibold mb-4">Login</h2>
         <input
           type="email"
