@@ -34,11 +34,23 @@ const EventForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
+    // Obtener el usuario autenticado desde el backend
+    let githubUser = null;
+    try {
+      const userResponse = await fetch("http://localhost:4000/api/user", {
+        credentials: "include",
+      });
+      const userData = await userResponse.json();
+      githubUser = userData.user ? userData.user.username : "Unknown";
+    } catch (error) {
+      console.error("Error fetching GitHub user:", error);
+    }
+  
     // Obtener timezone solo al enviar
     let timezone = moment.tz.guess();
     const country = formData.address_city_country.split(", ")[1];
-
+  
     try {
       const response = await fetch(`https://worldtimeapi.org/api/timezone`);
       const timezones = await response.json();
@@ -46,10 +58,12 @@ const EventForm = () => {
     } catch (error) {
       console.error("Could not fetch timezone:", error);
     }
-
-    const finalData = { ...formData, timezone };
+  
+    // Crear el objeto final incluyendo el usuario autenticado de GitHub
+    const finalData = { ...formData, timezone, submitted_by: githubUser };
     console.log(finalData);
   };
+  
 
   return (
     <form className="w-full max-w-4xl flex flex-col gap-4" onSubmit={handleSubmit}>
