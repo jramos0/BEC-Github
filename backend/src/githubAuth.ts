@@ -1,55 +1,54 @@
 import express from 'express';
-import session from 'express-session';
-import passport from 'passport';
-import { Strategy as GitHubStrategy, Profile } from 'passport-github2';
 import cors from 'cors';
 import dotenv from 'dotenv';
-
+const fetch = async (...args: Parameters<typeof import("node-fetch").default>) => {
+  const { default: fetch } = await import("node-fetch");
+  return fetch(...args);
+};
+var bodyParser = require('body-parser')
 dotenv.config();
 
 const app = express();
 
-app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }));
-app.use(session({ 
-  secret: process.env.SESSION_SECRET as string, 
-  resave: false, 
-  saveUninitialized: true 
-}));
+const CLIENT = process.env.GITHUB_CLIENT_ID
+const SECRET = process.env.GITHUB_CLIENT_SECRET
+app.use(cors());
+app.use(express.json());
+app.use(bodyParser.json())
 
-app.use(passport.initialize());
-app.use(passport.session());
+app.get('/getAccessToken', async function (req, res) {
+  req.query.code;
 
-passport.serializeUser((user, done) => done(null, user));
-passport.deserializeUser((user: Express.User, done) => done(null, user));
+  const params = "?client_id=" + CLIENT + "&client_secret=" + SECRET + "&code=" + req.query.code;
 
-passport.use(new GitHubStrategy({
-    clientID: process.env.GITHUB_CLIENT_ID as string,
-    clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
-    callbackURL: `${process.env.BACKEND_URL}/auth/github/callback`,
-  },
-  (
-    accessToken: string,
-    refreshToken: string,
-    profile: Profile,
-    done: (error: unknown, user?: Express.User | null) => void
-  ) => {
-    return done(null, profile);
-  }
-));
+  await fetch("https://www.github.com/login/oauth/access_token" + params, {
+    method: 'POST',
+    headers: {
+      "Accept": "application/json"
+    }
 
-app.get('/auth/github', passport.authenticate('github', { scope: ['user:email'] }));
-
-app.get('/auth/github/callback', passport.authenticate('github', {
-  successRedirect: `${process.env.FRONTEND_URL}/`,
-  failureRedirect: `${process.env.FRONTEND_URL}/login`,
-}));
-
-app.get('/api/user', (req, res) => {
-  if (req.isAuthenticated()) {
-    res.json({ user: req.user });
-  } else {
-    res.status(401).json({ user: null });
-  }
+  }).then((response) => {
+    return response.json();
+  }).then((data) => {
+    console.log(data)
+    res.json(data);
+  });
 });
 
-app.listen(4000, () => console.log('Servidor iniciado en puerto 4000'));
+app.get('/getUserData', async function (req, res) {
+  req.get('Authorization');
+  await fetch("https://api.github.com/user", {
+    method: "GET",
+    headers: {
+      "Authorization": req.get("Authorization") as string
+    }
+  }).then((response) => {
+    return response.json()
+  }).then((data) => {
+    console.log(data)
+    res.json(data)
+  })
+})
+
+
+export default app
