@@ -1,6 +1,7 @@
 const GithubLoginButton = () => {
   const handleLogin = () => {
-    window.location.href = `${import.meta.env.VITE_BACKEND_URL}/auth/github`;
+    const CLIENT_ID = import.meta.env.VITE_CLIENT_ID
+    window.location.assign(import.meta.env.VITE_BACKEND_URL+ CLIENT_ID);
   };
 
   return (

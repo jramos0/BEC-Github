@@ -1,4 +1,3 @@
-import React from 'react';
 import pbnLogo from '../assets/pbn_logo.png';
 import GithubLoginButton from '../components/GithubLoginButton';
 
