@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import resourceParser from "./resourceParser";
 
 dotenv.config();
 
@@ -9,6 +10,12 @@ const PORT = process.env.PORT || 4000;
 
 app.use(cors());
 app.use(express.json());
+
+app.post("/", (req, res)=>{
+  console.log("Data received!");
+  res.status(500).send("OK");
+  resourceParser(req.body)
+});
 
 app.get("/", (req, res) => {
   res.send("Backend funcionando 🚀");

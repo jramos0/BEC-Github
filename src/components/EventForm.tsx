@@ -6,6 +6,7 @@ import moment from "moment-timezone";
 
 const EventForm = () => {
   const [formData, setFormData] = useState({
+    resourceType: "Events",
     id: uuidv4(),
     start_date: new Date(),
     end_date: new Date(),
@@ -62,6 +63,24 @@ const EventForm = () => {
     // Crear el objeto final incluyendo el usuario autenticado de GitHub
     const finalData = { ...formData, timezone, submitted_by: githubUser };
     console.log(finalData);
+  
+    //Enviar el finalData al backend como JSON
+    try{
+      fetch('http://localhost:4000/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(finalData),
+      })
+      .then(response => response.text())
+      .then(data => console.log('Server response:', data))
+      .catch(error => console.error('Error:', error));
+    }catch(error)
+    {
+      console.error("Error sending data: ", error)
+      alert("Error sending data: "+ error)
+    }
   };
   
 
