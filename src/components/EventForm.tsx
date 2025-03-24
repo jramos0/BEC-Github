@@ -73,7 +73,12 @@ const EventForm = () => {
         },
         body: JSON.stringify(finalData),
       })
-      .then(response => response.text())
+      .then(response => {
+        response.text()
+        if(response.ok) {
+          window.location.assign('http://localhost:5173/')
+        }
+      })
       .then(data => console.log('Server response:', data))
       .catch(error => console.error('Error:', error));
     }catch(error)

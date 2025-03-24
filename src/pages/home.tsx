@@ -70,6 +70,7 @@ const Home = () => {
         </>:
         <>
           <button onClick={()=>{window.location.href="http://localhost:5173/login"}}>Sign in</button>
+          <button style={{marginTop: '5px'}} onClick={()=>{window.location.href="http://localhost:5173/events"}}>Events</button>
         </>
     }
     </div>

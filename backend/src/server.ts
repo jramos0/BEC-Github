@@ -3,7 +3,6 @@ import cors from "cors";
 import dotenv from "dotenv";
 import resourceParser from "./resourceParser";
 import githubAuth from './githubAuth';
-import resourceParser from "./resourceParser";
 
 dotenv.config();
 
@@ -14,9 +13,14 @@ app.use(cors());
 app.use(express.json());
 
 app.post("/", (req, res)=>{
-  console.log("Data received!");
-  res.status(500).send("OK");
+  try{
   resourceParser(req.body)
+  console.log("Data received!");
+  res.status(200).send();
+  } catch(error){
+    console.error("Error receiving data: ", error);
+    res.status(500).send();
+  }
 });
 
 app.get("/", (req, res) => {
