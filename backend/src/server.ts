@@ -3,7 +3,6 @@ import cors from "cors";
 import dotenv from "dotenv";
 import resourceParser from "./resourceParser";
 import githubAuth from './githubAuth';
-
 dotenv.config();
 
 const app = express();
