@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import resourceParser from "./resourceParser";
+import resourceParser from "./utils/resourceParser";
 import githubAuth from './githubAuth';
 dotenv.config();
 

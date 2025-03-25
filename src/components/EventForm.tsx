@@ -6,7 +6,7 @@ import moment from "moment-timezone";
 
 const EventForm = () => {
   const [formData, setFormData] = useState({
-    resourceType: "Events",
+    category: "Events",
     id: uuidv4(),
     start_date: new Date(),
     end_date: new Date(),
