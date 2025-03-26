@@ -1,9 +1,13 @@
 const GithubLoginButton = () => {
   const handleLogin = () => {
-    const CLIENT_ID = import.meta.env.VITE_CLIENT_ID
-    window.location.assign(import.meta.env.VITE_BACKEND_URL+ CLIENT_ID);
-  };
+    const clientId = import.meta.env.VITE_CLIENT_ID;
+    const scope = import.meta.env.VITE_SCOPE;
+    const redirectUri = window.location.origin;
 
+    const githubAuthUrl = `${import.meta.env.VITE_BACKEND_URL}?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
+
+    window.location.assign(githubAuthUrl);
+  };
   return (
     <button
       onClick={handleLogin}
