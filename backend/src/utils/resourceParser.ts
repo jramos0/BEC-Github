@@ -1,30 +1,13 @@
 import yaml from "yaml";
-import fs from "node:fs/promises";
-import * as dirManager from "./dirManager";
-import imageManager from "./imageManager";
-import { format } from "date-fns";
-
-interface ResourceData {
-    id: string;
-    start_date: string;
-    end_date: string;
-    timezone: string;
-    address_city_country: string;
-    name: string;
-    type: string;
-    description: string;
-    language1: string;
-    language2?: string;
-    website: string;
-    project_id: string;
-    tags: string[];
-    category: string;
-}
-
-//Identifica el tipo de recurso
-export default function resourceIdentifier(data: ResourceData, image: any) {
-    const resourceCategory = data.category;
-    switch (resourceCategory) {
+import fs from "node:fs/promises"
+import * as resInterfaces from "./resourceInterfaces";
+import * as dirManager from "./dirManager"
+//Identifica el tipo de recurso a
+export default function resourceIdentifier(data: any){
+    //Parsea a un formato específico según el tipo de recurso
+    const resourceCategory = data['category']
+    switch(resourceCategory)
+    {
         case "Events":
             parseEvents(data, image);
             break;
