@@ -19,6 +19,7 @@ const EventForm = () => {
     language2: "",
     website: "",
     tags: ["", "", ""],
+    thumbnail: null as File | null,
   });
 
   const eventTypes = ["conference", "exam", "meetup", "lecture", "workshop"];
@@ -100,27 +101,54 @@ const EventForm = () => {
     onChange={handleChange}
   />
 
-  <div className="flex gap-4">
-    <DatePicker
-      selected={formData.start_date}
-      onChange={(date: Date | null) => {
-        if (date) setFormData({ ...formData, start_date: date });
-      }}
-      showTimeSelect
-      dateFormat="yyyy-MM-dd HH:mm:ss"
-      className="p-3 rounded bg-gray-800 text-white w-full"
-    />
+      <div className="flex gap-4">
+        <div className="w-1/3">
+          <DatePicker
+            selected={formData.start_date}
+            onChange={(date: Date | null) => {
+              if (date) setFormData({ ...formData, start_date: date });
+            }}
+            showTimeSelect
+            dateFormat="yyyy-MM-dd HH:mm:ss"
+            className="p-3 rounded bg-gray-800 text-white w-full"
+          />
+        </div>
 
-    <DatePicker
-      selected={formData.end_date}
-      onChange={(date: Date | null) => {
-        if (date) setFormData({ ...formData, end_date: date });
-      }}
-      showTimeSelect
-      dateFormat="yyyy-MM-dd HH:mm:ss"
-      className="p-3 rounded bg-gray-800 text-white w-full"
-    />
-  </div>
+        <div className="w-1/3">
+          <DatePicker
+            selected={formData.end_date}
+            onChange={(date: Date | null) => {
+              if (date) setFormData({ ...formData, end_date: date });
+            }}
+            showTimeSelect
+            dateFormat="yyyy-MM-dd HH:mm:ss"
+            className="p-3 rounded bg-gray-800 text-white w-full"
+          />
+        </div>
+
+        <div className="w-1/3 flex items-end">
+          <label
+            title="Upload only horizontal images"
+            className="cursor-pointer bg-gray-800 hover:bg-orange-700 text-white text-sm px-5 py-3 rounded-md transition shadow-md w-full text-center"
+          >
+            Upload Thumbnail
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  console.log("Selected image:", file.name);
+                  setFormData({ ...formData, thumbnail: file });
+                }
+              }}
+            />
+          </label>
+        </div>
+      </div>
+
+
 
   <div className="flex gap-4">
     <input
