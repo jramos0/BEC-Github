@@ -3,6 +3,8 @@ import { v4 as uuidv4 } from "uuid";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import moment from "moment-timezone";
+const apiKey = import.meta.env.VITE_TIMEZONEDB_KEY;
+
 
 const EventForm = () => {
   const [formData, setFormData] = useState({
@@ -49,17 +51,38 @@ const EventForm = () => {
       console.error("Error fetching GitHub user:", error);
     }
   
-    // Obtener timezone solo al enviar
-    let timezone = moment.tz.guess();
-    const country = formData.address_city_country.split(", ")[1];
-  
-    try {
-      const response = await fetch(`https://worldtimeapi.org/api/timezone`);
-      const timezones = await response.json();
-      timezone = timezones.find((tz: string) => tz.includes(country)) || timezone;
-    } catch (error) {
-      console.error("Could not fetch timezone:", error);
+    // Obtener timezone usando Nominatim + TimeZoneDB
+let timezone = moment.tz.guess(); // fallback si todo falla
+const locationQuery = encodeURIComponent(formData.address_city_country);
+
+try {
+  const nominatimRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${locationQuery}&format=json&limit=1`, {
+    headers: {
+      'User-Agent': 'YourAppName/1.0 (youremail@example.com)' // Requerido por OSM
     }
+  });
+  const nominatimData = await nominatimRes.json();
+
+  if (nominatimData.length > 0) {
+    const lat = nominatimData[0].lat;
+    const lon = nominatimData[0].lon;
+
+    const timezoneRes = await fetch(`https://api.timezonedb.com/v2.1/get-time-zone?key=${apiKey}&format=json&by=position&lat=${lat}&lng=${lon}`);
+    const timezoneData = await timezoneRes.json();
+
+    if (timezoneData.status === "OK") {
+      timezone = timezoneData.zoneName;
+    } else {
+      console.warn("TimeZoneDB error:", timezoneData.message);
+    }
+  } else {
+    console.warn("No location found in OpenStreetMap");
+  }
+} catch (error) {
+  console.error("Error fetching timezone from OSM/TimeZoneDB:", error);
+}
+
+
   
     // Crear el objeto final incluyendo el usuario autenticado de GitHub
     const finalData = { ...formData, timezone, submitted_by: githubUser };
