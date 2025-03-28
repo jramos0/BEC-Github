@@ -5,7 +5,6 @@ import "react-datepicker/dist/react-datepicker.css";
 import moment from "moment-timezone";
 import axios from "axios";
 const apiKey = import.meta.env.VITE_TIMEZONEDB_KEY;
-import axios from "axios";
 
 const EventForm = () => {
   const [formData, setFormData] = useState({
