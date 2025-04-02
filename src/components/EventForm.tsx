@@ -52,51 +52,41 @@ const EventForm = () => {
     }
   
     // Obtener timezone usando Nominatim + TimeZoneDB
-let timezone = moment.tz.guess(); // fallback si todo falla
-const locationQuery = encodeURIComponent(formData.address_city_country);
-
-try {
-  const nominatimRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${locationQuery}&format=json&limit=1`, {
-    headers: {
-      'User-Agent': 'YourAppName/1.0 (youremail@example.com)' // Requerido por OSM
+    let timezone = moment.tz.guess(); // fallback si falla todo
+    const locationQuery = encodeURIComponent(formData.address_city_country);
+    
+    try {
+      const nominatimRes = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${locationQuery}&format=json&limit=1`,
+        {
+          headers: {
+            "User-Agent": "BEC-Github-Client/1.0 (contact@bec.org)",
+          },
+        }
+      );
+      const nominatimData = await nominatimRes.json();
+    
+      if (nominatimData.length > 0) {
+        const lat = nominatimData[0].lat;
+        const lon = nominatimData[0].lon;
+    
+        const timezoneRes = await fetch(
+          `https://api.timezonedb.com/v2.1/get-time-zone?key=${apiKey}&format=json&by=position&lat=${lat}&lng=${lon}`
+        );
+        const timezoneData = await timezoneRes.json();
+    
+        if (timezoneData.status === "OK") {
+          timezone = timezoneData.zoneName;
+        } else {
+          console.warn("TimeZoneDB error:", timezoneData.message);
+        }
+      } else {
+        console.warn("No location found in OpenStreetMap");
+      }
+    } catch (error) {
+      console.error("Error fetching timezone from OSM/TimeZoneDB:", error);
     }
-  });
-  const nominatimData = await nominatimRes.json();
-
-  if (nominatimData.length > 0) {
-    const lat = nominatimData[0].lat;
-    const lon = nominatimData[0].lon;
-
-    const timezoneRes = await fetch(`https://api.timezonedb.com/v2.1/get-time-zone?key=${apiKey}&format=json&by=position&lat=${lat}&lng=${lon}`);
-    const timezoneData = await timezoneRes.json();
-
-    if (timezoneData.status === "OK") {
-      timezone = timezoneData.zoneName;
-    } else {
-      console.warn("TimeZoneDB error:", timezoneData.message);
-    }
-    }
-  });
-  const nominatimData = await nominatimRes.json();
-
-  if (nominatimData.length > 0) {
-    const lat = nominatimData[0].lat;
-    const lon = nominatimData[0].lon;
-
-    const timezoneRes = await fetch(`https://api.timezonedb.com/v2.1/get-time-zone?key=${apiKey}&format=json&by=position&lat=${lat}&lng=${lon}`);
-    const timezoneData = await timezoneRes.json();
-
-    if (timezoneData.status === "OK") {
-      timezone = timezoneData.zoneName;
-    } else {
-      console.warn("TimeZoneDB error:", timezoneData.message);
-    }
-  } else {
-    console.warn("No location found in OpenStreetMap");
-  }
-} catch (error) {
-  console.error("Error fetching timezone from OSM/TimeZoneDB:", error);
-}
+    
 
 
   

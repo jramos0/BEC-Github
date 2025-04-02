@@ -6,13 +6,10 @@ const Home = () => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [userData, setUserData] = useState<GitHubUser | null>(null);
 
-  // Detectar el código de GitHub y pedir el access_token
   useEffect(() => {
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
+    const urlParams = new URLSearchParams(window.location.search);
     const codeParam = urlParams.get("code");
 
-    // Si no hay token pero sí hay un code, pedimos uno nuevo
     if (codeParam && !localStorage.getItem("accessToken")) {
       async function getAccessToken() {
         const response = await fetch(`http://localhost:4000/getAccessToken?code=${codeParam}`);
@@ -21,8 +18,6 @@ const Home = () => {
         if (data.access_token) {
           localStorage.setItem("accessToken", data.access_token);
           setAccessToken(data.access_token);
-
-          // Limpiar la URL (quitar ?code=...)
           window.history.replaceState({}, document.title, window.location.pathname);
         }
       }
@@ -36,7 +31,6 @@ const Home = () => {
     }
   }, []);
 
-  // Obtener datos del usuario con el access token
   useEffect(() => {
     async function getUserData() {
       if (!accessToken) return;
@@ -60,30 +54,51 @@ const Home = () => {
     localStorage.removeItem("accessToken");
     setAccessToken(null);
     setUserData(null);
-    window.location.href = "/";
+    window.location.replace("/");
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white px-4">
       <div className="mb-6">
         <img src={pbnLogo} alt="Plan B Network Logo" className="h-14 w-full" />
       </div>
 
-      <h1 className="text-4xl font-bold my-3">Welcome</h1>
-
       {accessToken ? (
         <>
           {userData ? (
-            <h3 className="text-3xl">User: <strong>{userData.login}</strong></h3>
+            <h3 className="text-3xl mb-6">Welcome <strong>{userData.login}</strong></h3>
           ) : (
-            <p>Loading user...</p>
+            <p className="mb-6">Loading user...</p>
           )}
-          <button onClick={handleLogout} className="my-3">Log out</button>
+
+          {/* Botones de navegación */}
+            <div className="flex flex-wrap justify-center gap-4 mt-4 w-full max-w-4xl">
+              {[
+                { label: "Events", path: "/events" },
+                { label: "Newsletter", path: "/newsletter" },
+                { label: "Professor", path: "/professor" },
+                { label: "Project", path: "/project" }
+              ].map(({ label, path }) => (
+                <button
+                  key={label}
+                  onClick={() => window.location.href = path}
+                  className="bg-gray-800 text-white px-6 py-2 rounded hover:bg-orange-600 transition min-w-[120px] text-sm md:text-base"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+
+          <button onClick={handleLogout} className="my-6 text-sm underline text-gray-400 hover:text-orange-500">
+            Log out
+          </button>
         </>
       ) : (
         <>
-          <button onClick={() => window.location.href = "/login"}>Sign in</button>
-          <button style={{ marginTop: '5px' }} onClick={() => window.location.href = "/events"}>Events</button>
+          <button onClick={() => window.location.href = "/login"} className="bg-gray-800 px-4 py-2 rounded hover:bg-orange-600 transition">
+            Sign in
+          </button>
         </>
       )}
     </div>
