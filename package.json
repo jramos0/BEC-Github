@@ -12,6 +12,7 @@
   "dependencies": {
     "axios": "^1.8.3",
     "moment-timezone": "^0.5.47",
+    "multer": "1.4.5-lts.2",
     "react": "^19.0.0",
     "react-datepicker": "^8.2.1",
     "react-dom": "^19.0.0",
@@ -21,6 +22,7 @@
   "devDependencies": {
     "@eslint/js": "^9.21.0",
     "@types/moment-timezone": "^0.5.30",
+    "@types/multer": "^1.4.12",
     "@types/react": "^19.0.10",
     "@types/react-datepicker": "^7.0.0",
     "@types/react-dom": "^19.0.4",
