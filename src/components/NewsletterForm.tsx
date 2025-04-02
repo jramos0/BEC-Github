@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { supportedLanguages } from "../constants/languages";
+
 
 const NewsletterForm = () => {
   const navigate = useNavigate();
@@ -119,14 +121,20 @@ const NewsletterForm = () => {
           onChange={handleChange}
         />
 
-        <input
-          type="text"
+        <select
           name="language"
-          placeholder="Language (e.g., en)"
-          className="p-3 rounded bg-gray-800 text-white w-full"
           value={formData.language}
           onChange={handleChange}
-        />
+          className="p-3 rounded bg-gray-800 text-white w-full"
+        >
+          <option value="">Select Language</option>
+          {supportedLanguages.map((lang) => (
+            <option key={lang} value={lang}>
+              {lang}
+            </option>
+          ))}
+        </select>
+
       </div>
 
       <input

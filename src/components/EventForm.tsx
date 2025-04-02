@@ -6,6 +6,8 @@ import moment from "moment-timezone";
 import { useNavigate } from "react-router-dom";
 const apiKey = import.meta.env.VITE_TIMEZONEDB_KEY;
 import axios from "axios";
+import { supportedLanguages } from "../constants/languages";
+
 
 const EventForm = () => {
   const navigate = useNavigate();
@@ -213,21 +215,34 @@ const EventForm = () => {
     onChange={handleChange}
   />
 
-  <input
-    type="text"
-    placeholder="Primary Language (e.g., en)"
-    className="p-3 rounded bg-gray-800 text-white w-40"
-    value={formData.language1}
-    onChange={(e) => setFormData({ ...formData, language1: e.target.value })}
-  />
+<select
+  name="language1"
+  value={formData.language1}
+  onChange={handleChange}
+  className="p-3 rounded bg-gray-800 text-white w-full"
+>
+  <option value="">Select Language</option>
+  {supportedLanguages.map((lang) => (
+    <option key={lang} value={lang}>
+      {lang}
+    </option>
+  ))}
+</select>
 
-  <input
-    type="text"
-    placeholder="Secondary Lang"
-    className="p-3 rounded bg-gray-800 text-white w-40"
-    value={formData.language2}
-    onChange={(e) => setFormData({ ...formData, language2: e.target.value })}
-  />
+<select
+  name="language2"
+  value={formData.language2}
+  onChange={handleChange}
+  className="p-3 rounded bg-gray-800 text-white w-full"
+>
+  <option value="">Optional: Second Language</option>
+  {supportedLanguages.map((lang) => (
+    <option key={lang} value={lang}>
+      {lang}
+    </option>
+  ))}
+</select>
+
 </div>
 
 
