@@ -200,34 +200,35 @@ const ProfessorForm = () => {
     />
   )}
 </div>
-<textarea name="bio" placeholder="Full Bio" className="p-3 rounded bg-gray-800 text-white w-full" rows={4} value={formData.bio} onChange={handleChange} />
+    <textarea name="bio" placeholder="Full Bio" className="p-3 rounded bg-gray-800 text-white w-full" rows={4} value={formData.bio} onChange={handleChange} />
       <input type="text" name="short_bio" placeholder="Short Bio" className="p-3 rounded bg-gray-800 text-white w-full" value={formData.short_bio} onChange={handleChange} />
+      
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <input type="text" name="lightning_address" placeholder="Lightning Address" className="p-3 rounded bg-gray-800 text-white w-full" value={formData.lightning_address} onChange={handleChange} />
 
-      <label className="cursor-pointer bg-gray-800 hover:bg-orange-700 text-white text-sm px-5 py-3 rounded-md transition shadow-md w-full text-center">
+        <input type="text" name="company" placeholder="Company" className="p-3 rounded bg-gray-800 text-white w-full" value={formData.company} onChange={handleChange} />
+        </div>
+     
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* <div className="flex flex-col gap-2 w-full">
+          <label className="text-sm text-gray-400">Affiliations (UUIDs)</label>
+          {formData.affiliations.map((aff, index) => (
+            <input key={index} type="text" placeholder={`Affiliation ${index + 1}`} className="p-3 rounded bg-gray-800 text-white" value={aff} onChange={(e) => handleArrayChange("affiliations", index, e.target.value)} />
+          ))}
+        </div> */}
+        <div className="flex gap-2 w-full">
+          {formData.tags.map((tag, index) => (
+            <input key={index} type="text" placeholder={`Tag ${index + 1}`} className="p-3 w-full rounded bg-gray-800 text-white" value={tag} onChange={(e) => handleArrayChange("tags", index, e.target.value)} />
+          ))}
+        </div>
+
+        <label className="cursor-pointer bg-gray-800 hover:bg-orange-700 text-white text-sm px-5 py-3 rounded-md transition shadow-md w-full text-center">
         Upload Thumbnail
         <input type="file" accept="image/*" className="hidden" onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) setFormData((prev) => ({ ...prev, thumbnail: file }));
         }} />
       </label>
-
-      <input type="text" name="lightning_address" placeholder="Lightning Address" className="p-3 rounded bg-gray-800 text-white w-full" value={formData.lightning_address} onChange={handleChange} />
-
-      <input type="text" name="company" placeholder="Company" className="p-3 rounded bg-gray-800 text-white w-full" value={formData.company} onChange={handleChange} />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="flex flex-col gap-2 w-full">
-          <label className="text-sm text-gray-400">Affiliations (UUIDs)</label>
-          {formData.affiliations.map((aff, index) => (
-            <input key={index} type="text" placeholder={`Affiliation ${index + 1}`} className="p-3 rounded bg-gray-800 text-white" value={aff} onChange={(e) => handleArrayChange("affiliations", index, e.target.value)} />
-          ))}
-        </div>
-        <div className="flex flex-col gap-2 w-full">
-          <label className="text-sm text-gray-400">Tags</label>
-          {formData.tags.map((tag, index) => (
-            <input key={index} type="text" placeholder={`Tag ${index + 1}`} className="p-3 rounded bg-gray-800 text-white" value={tag} onChange={(e) => handleArrayChange("tags", index, e.target.value)} />
-          ))}
-        </div>
       </div>
 
       
