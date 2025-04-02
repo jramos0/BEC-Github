@@ -4,7 +4,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import moment from "moment-timezone";
 const apiKey = import.meta.env.VITE_TIMEZONEDB_KEY;
-
+import axios from "axios";
 
 const EventForm = () => {
   const [formData, setFormData] = useState({
@@ -87,28 +87,23 @@ try {
     // Crear el objeto final incluyendo el usuario autenticado de GitHub
     const finalData = { ...formData, timezone, submitted_by: githubUser };
     console.log(finalData);
-  
-    //Enviar el finalData al backend como JSON
+
+    //Enviar finalData al server
     try{
-      fetch('http://localhost:4000/', {
-        method: 'POST',
+      await axios.post("http://localhost:4000/", finalData, {
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'multipart/form-data',
         },
-        body: JSON.stringify(finalData),
       })
       .then(response => {
-        response.text()
-        if(response.ok) {
+        if(response.status === 200) {
+          console.log("Server response: ", response.data)
           window.location.assign('http://localhost:5173/')
         }
       })
-      .then(data => console.log('Server response:', data))
       .catch(error => console.error('Error:', error));
-    }catch(error)
-    {
+    }catch(error){
       console.error("Error sending data: ", error)
-      alert("Error sending data: "+ error)
     }
   };
   
@@ -161,17 +156,14 @@ try {
               className="hidden"
               onChange={(e) => {
                 const file = e.target.files?.[0];
-                if (file) {
-                  console.log("Selected image:", file.name);
-                  setFormData({ ...formData, thumbnail: file });
+                if (file) {  
+                    formData.thumbnail = file;
                 }
               }}
             />
           </label>
         </div>
       </div>
-
-
 
   <div className="flex gap-4">
     <input
