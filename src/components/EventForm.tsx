@@ -75,6 +75,22 @@ try {
     } else {
       console.warn("TimeZoneDB error:", timezoneData.message);
     }
+    }
+  });
+  const nominatimData = await nominatimRes.json();
+
+  if (nominatimData.length > 0) {
+    const lat = nominatimData[0].lat;
+    const lon = nominatimData[0].lon;
+
+    const timezoneRes = await fetch(`https://api.timezonedb.com/v2.1/get-time-zone?key=${apiKey}&format=json&by=position&lat=${lat}&lng=${lon}`);
+    const timezoneData = await timezoneRes.json();
+
+    if (timezoneData.status === "OK") {
+      timezone = timezoneData.zoneName;
+    } else {
+      console.warn("TimeZoneDB error:", timezoneData.message);
+    }
   } else {
     console.warn("No location found in OpenStreetMap");
   }
