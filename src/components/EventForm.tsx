@@ -3,10 +3,12 @@ import { v4 as uuidv4 } from "uuid";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import moment from "moment-timezone";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 const apiKey = import.meta.env.VITE_TIMEZONEDB_KEY;
 
 const EventForm = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     category: "Events",
     id: uuidv4(),
@@ -104,7 +106,7 @@ const EventForm = () => {
       .then(response => {
         if(response.status === 200) {
           console.log("Server response: ", response.data)
-          window.location.assign('http://localhost:5173/')
+          navigate("/");
         }
       })
       .catch(error => console.error('Error:', error));
