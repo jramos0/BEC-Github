@@ -213,9 +213,9 @@ const EventForm = () => {
   className="p-3 rounded bg-gray-800 text-white w-full"
 >
   <option value="">Select Language</option>
-  {supportedLanguages.map((lang) => (
-    <option key={lang} value={lang}>
-      {lang}
+  {Object.entries(supportedLanguages).map(([code, name]) => (
+    <option key={code} value={code}>
+      {name}
     </option>
   ))}
 </select>
@@ -226,10 +226,10 @@ const EventForm = () => {
   onChange={handleChange}
   className="p-3 rounded bg-gray-800 text-white w-full"
 >
-  <option value="">Optional: Second Language</option>
-  {supportedLanguages.map((lang) => (
-    <option key={lang} value={lang}>
-      {lang}
+<option value="">Select Language</option>
+  {Object.entries(supportedLanguages).map(([code, name]) => (
+    <option key={code} value={code}>
+      {name}
     </option>
   ))}
 </select>

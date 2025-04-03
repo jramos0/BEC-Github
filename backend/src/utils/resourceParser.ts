@@ -1,32 +1,22 @@
 import yaml from "yaml";
 import fs from "node:fs/promises";
 import * as dirManager from "./dirManager";
+import * as resourceInterfaces from "./resourceInterfaces";
 import imageManager from "./imageManager";
 import { format } from "date-fns";
 
-interface ResourceData {
-    id: string;
-    start_date: string;
-    end_date: string;
-    timezone: string;
-    address_city_country: string;
-    name: string;
-    type: string;
-    description: string;
-    language1: string;
-    language2?: string;
-    website: string;
-    project_id: string;
-    tags: string[];
-    category: string;
-}
-
 //Identifica el tipo de recurso
-export default function resourceIdentifier(data: ResourceData, image: any) {
+export default function resourceIdentifier(data: any, image: any) {
     const resourceCategory = data.category;
     switch (resourceCategory) {
         case "Events":
             parseEvents(data, image);
+            break;
+        case "Newsletter":
+            parseNewsletter(data, image);
+            break;
+        case "Professor":
+            parseProfessor(data, image);
             break;
         default:
             console.log("Resource type not valid");
@@ -34,7 +24,7 @@ export default function resourceIdentifier(data: ResourceData, image: any) {
 }
 
 //Parsing para la categoría eventos
-async function parseEvents(data: ResourceData, image: any): Promise<void> {
+async function parseEvents(data: resourceInterfaces.EventData, image: any): Promise<void> {
     const formatDate = (dateStr: string) => {
         return format(new Date(dateStr), "yyyy-MM-dd HH:mm:ss");
     };
@@ -66,8 +56,81 @@ async function parseEvents(data: ResourceData, image: any): Promise<void> {
         await fs.writeFile(`${parentPath}/event.yml`, yamlData, 'utf8');
         console.log(`Archivo YAML creado exitosamente en: ${parentPath}/event.yml`);
 
-        imageManager(image, childPath)
+        imageManager(image, childPath, "thumbnail")
     } catch (error) {
-        console.error("Error al crear archivo yaml: ", error);
+        console.error("Error processing data: ", error);
+    }
+}
+
+//Parsing para la categoría Newsletter
+async function parseNewsletter(data: resourceInterfaces.NewsletterData, image: any): Promise<void> {
+    const formatDate = (dateStr: string) => {
+        return format(new Date(dateStr), "yyyy-MM-dd HH:mm:ss");
+    };
+    try{
+        const description = `${data.description}\n`;
+        const newsletterData = {
+            id: data.id,
+            title: data.title,
+            author: data.author,
+            level: data.level,
+            publication_date: data.publication_date,
+            links: {
+                website: data.website
+            },
+            language: data.language,
+            description: description,
+            contributor_names: data.contributor_names,
+            tags: data.tags,
+        }
+
+        const parentPath = await dirManager.createFolder(data.title);
+        const childPath = await dirManager.createChildFolder(parentPath);
+        const yamlData = yaml.stringify(newsletterData);
+
+        await fs.writeFile(`${parentPath}/newsletter.yml`, yamlData, 'utf8');
+        console.log(`Archivo YAML creado exitosamente en: ${parentPath}/newsletter.yml`);
+
+        imageManager(image, childPath, "thumbnail")
+    }catch(error){
+        console.error("Error processing data: ", error);
+    }
+}
+
+//Parsing para la categoría Professors
+async function parseProfessor(data: resourceInterfaces.ProfessorData, image: any): Promise<void> {
+    const formatDate = (dateStr: string) => {
+        return format(new Date(dateStr), "yyyy-MM-dd HH:mm:ss");
+    };
+    try{
+        const links = [data.twitter, data.github, data.website, data.nostr].filter(Boolean)
+        const professorYMLData = {
+            id: data.id,
+            name: data.name,
+            contributor_id: data.contributor_id,
+            links: links,
+            ...(data.lightning_address && { tips: { lightning_address: data.lightning_address } }),
+            company: data.company ? data.company : undefined ,
+            affiliations: data.affiliations,
+            tags: data.tags,
+        }
+        const professorENData = {
+            bio: data.bio,
+            short_bio: data.short_bio,
+        }
+
+        const parentPath = await dirManager.createFolder(data.name);
+        const childPath = await dirManager.createChildFolder(parentPath);
+        const yamlData = yaml.stringify(professorYMLData);
+        const yamlENData = yaml.stringify(professorENData);
+
+        await fs.writeFile(`${parentPath}/professor.yml`, yamlData, 'utf8');
+        await fs.writeFile(`${parentPath}/en.yml`, yamlENData, 'utf8');
+        console.log(`Archivo YAML creado exitosamente en: ${parentPath}/professor.yml`);
+        console.log(`Archivo YAML creado exitosamente en: ${parentPath}/en.yml`);
+
+        imageManager(image, childPath, "profile")
+    }catch(error){
+        console.error("Error processing data: ", error);
     }
 }
