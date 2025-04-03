@@ -128,9 +128,9 @@ const NewsletterForm = () => {
           className="p-3 rounded bg-gray-800 text-white w-full"
         >
           <option value="">Select Language</option>
-          {supportedLanguages.map((lang) => (
-            <option key={lang} value={lang}>
-              {lang}
+          {Object.entries(supportedLanguages).map(([code, name]) => (
+            <option key={code} value={code}>
+              {name}
             </option>
           ))}
         </select>
