@@ -10,7 +10,12 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:5173", 
+  credentials: true
+}));
+
+
 app.use(express.json());
 
 const storage = multer.memoryStorage();
@@ -30,6 +35,8 @@ app.post("/", upload.single('thumbnail'), async (req, res)=>{
 app.get("/", (req, res) => {
   res.send("Backend funcionando 🚀");
 });
+
+
 
 app.use('/', githubAuth);
 

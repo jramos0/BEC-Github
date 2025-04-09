@@ -30,19 +30,14 @@ const ProjectForm = () => {
   });
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch("http://localhost:4000/api/user", {
-          credentials: "include",
-        });
-        const data = await res.json();
-        setContributorName(data.user?.username || "Unknown");
-      } catch (err) {
-        console.error("Error fetching user:", err);
-      }
-    };
-    fetchUser();
+    const storedUsername = localStorage.getItem("username");
+    if (storedUsername) {
+      setContributorName(storedUsername);
+    } else {
+      setContributorName("Unknown");
+    }
   }, []);
+  
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -141,12 +136,14 @@ const ProjectForm = () => {
           className="p-3 rounded bg-gray-800 text-white w-full"
         >
           <option value="">Select Language</option>
-          {supportedLanguages.map((lang) => (
-            <option key={lang} value={lang}>
-              {lang}
+          {Object.entries(supportedLanguages).map(([code, name]) => (
+            <option key={code} value={code}>
+              {name}
             </option>
           ))}
         </select>
+
+
 
       </div>
 

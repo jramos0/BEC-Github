@@ -65,6 +65,7 @@ const Home = () => {
       const forkRes = await forkReq.json();
       setUserFork(forkRes)
       setUserData(data);
+      localStorage.setItem("username", data.login);
       setLoading(false);
     }
 

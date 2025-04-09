@@ -6,16 +6,18 @@ const GithubLoginButton = () => {
 
   const handleLogin = () => {
     setLoading(true);
-    const clientId = import.meta.env.VITE_CLIENT_ID;
-    const scope = import.meta.env.VITE_SCOPE;
+
+    const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
+    const scope = import.meta.env.VITE_GITHUB_SCOPE;
     const redirectUri = window.location.origin;
 
-    const githubAuthUrl = `${import.meta.env.VITE_BACKEND_URL}?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
+    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
 
     setTimeout(() => {
       window.location.href = githubAuthUrl;
     }, 300);
   };
+
   return loading ? (
     <LoadingSpinner message="Redirecting to GitHub..." />
   ) : (
