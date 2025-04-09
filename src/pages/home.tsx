@@ -7,6 +7,7 @@ import LoadingSpinner from '../components/atoms/LoadingSpinner';
 const Home = () => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [userData, setUserData] = useState<GitHubUser | null>(null);
+  const [userFork, setUserFork] = useState<string| null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -53,6 +54,16 @@ const Home = () => {
 
       const data = await response.json();
       console.log('GitHub User:', data);
+
+      const forkReq= await fetch('http://localhost:4000/manage/forks',{
+        method: "GET",
+        headers: {
+          Authorization: "Bearer " + accessToken,
+        },
+      });
+
+      const forkRes = await forkReq.json();
+      setUserFork(forkRes)
       setUserData(data);
       setLoading(false);
     }
@@ -85,9 +96,14 @@ const Home = () => {
       {accessToken ? (
         <>
           {userData ? (
-            <h3 className="text-3xl mb-6">
+            <div>
+              <h3 className="text-3xl mb-6">
               Welcome <strong>{userData.login}</strong>
             </h3>
+            <h3 className="text-3xl mb-6">
+              Your Fork {userFork}
+            </h3>
+            </div>
           ) : (
             <p className="mb-6">Loading user...</p>
           )}

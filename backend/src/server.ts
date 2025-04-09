@@ -4,6 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import resourceParser from "./utils/resourceParser";
 import githubAuth from './githubAuth';
+import githubManage from './githubManage';
 dotenv.config();
 
 const app = express();
@@ -31,6 +32,8 @@ app.get("/", (req, res) => {
 });
 
 app.use('/', githubAuth);
+
+app.use("/manage/", githubManage );
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
