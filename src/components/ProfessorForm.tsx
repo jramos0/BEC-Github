@@ -2,12 +2,13 @@ import React, { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { supportedTags } from "../constants/tags";
 
 const ProfessorForm = () => {
   const navigate = useNavigate();
   
     type ProfessorFormData = {
-    category: "Professor";
+    resourceCategory: "Professor";
     id: string;
     name: string;
     contributor_id: string;
@@ -24,7 +25,7 @@ const ProfessorForm = () => {
     thumbnail: File | null;
   };
   const [formData, setFormData] = useState<ProfessorFormData>({
-    category: "Professor",
+    resourceCategory: "Professor",
     id: uuidv4(),
     name: "",
     contributor_id: "",
@@ -218,7 +219,19 @@ const ProfessorForm = () => {
         </div> */}
         <div className="flex gap-2 w-full">
           {formData.tags.map((tag, index) => (
-            <input key={index} type="text" placeholder={`Tag ${index + 1}`} className="p-3 w-full rounded bg-gray-800 text-white" value={tag} onChange={(e) => handleArrayChange("tags", index, e.target.value)} />
+            <select
+              key={index}
+              className="p-3 rounded bg-gray-800 text-white"
+              value={tag}
+              onChange={(e) => handleArrayChange("tags", index, e.target.value)}
+            >
+              <option value= "">Select a tag</option>
+              {supportedTags.map((tag) => (
+                <option key={tag} value={tag}>
+                  {tag}
+                </option> 
+              ))}
+            </select>          
           ))}
         </div>
 

@@ -3,12 +3,13 @@ import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { supportedLanguages } from "../constants/languages";
+import { supportedTags } from "../constants/tags";
 
 
 const NewsletterForm = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    category: "Newsletter",
+    resourceCategory: "Newsletter",
     id: uuidv4(),
     title: "",
     author: "",
@@ -172,14 +173,19 @@ const NewsletterForm = () => {
         <div className="flex flex-col gap-2">
           <label className="text-sm text-gray-400">Tags</label>
           {formData.tags.map((tag, index) => (
-            <input
+           <select
               key={index}
-              type="text"
-              placeholder={`Tag ${index + 1}`}
               className="p-3 rounded bg-gray-800 text-white"
               value={tag}
               onChange={(e) => handleArrayChange("tags", index, e.target.value)}
-            />
+            >
+              <option value= "">Select a tag</option>
+              {supportedTags.map((tag) => (
+                <option key={tag} value={tag}>
+                  {tag}
+                </option> 
+              ))}
+            </select>
           ))}
         </div>
       </div>

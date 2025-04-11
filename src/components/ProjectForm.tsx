@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { supportedLanguages } from "../constants/languages";
+import { supportedTags } from "../constants/tags";
 
 const categories = [
   "Communities", "Conference", "Education", "Exchange", "Infrastructure",
@@ -15,6 +16,7 @@ const ProjectForm = () => {
   const [contributorName, setContributorName] = useState<string>("");
 
   const [formData, setFormData] = useState({
+    resourceCategory: "Project",
     id: uuidv4(),
     name: "",
     description: "",
@@ -169,20 +171,25 @@ const ProjectForm = () => {
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="text-sm text-gray-400">Tags</label>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {formData.tags.map((tag, index) => (
-            <input
-              key={index}
-              type="text"
-              placeholder={`Tag ${index + 1}`}
-              className="p-3 rounded bg-gray-800 text-white"
-              value={tag}
-              onChange={(e) => handleTagChange(index, e.target.value)}
-            />
-          ))}
-        </div>
+      <label className="text-sm text-gray-400">Tags</label>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {formData.tags.map((tag, index) => (
+          <select
+            key={index}
+            className="p-3 rounded bg-gray-800 text-white"
+            value={tag}
+            onChange={(e) => handleTagChange(index, e.target.value)}
+          >
+            <option value= "">Select a tag</option>
+            {supportedTags.map((tag) => (
+              <option key={tag} value={tag}>
+                {tag}
+              </option> 
+            ))}
+          </select>
+        ))}
       </div>
+    </div>
 
       <button
         type="submit"
