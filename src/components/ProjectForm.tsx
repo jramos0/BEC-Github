@@ -4,7 +4,6 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { supportedLanguages } from "../constants/languages";
 
-
 const categories = [
   "Communities", "Conference", "Education", "Exchange", "Infrastructure",
   "Investment", "Manufacturer", "Merchant", "Mining", "News", "Node",
@@ -18,6 +17,8 @@ const ProjectForm = () => {
   const [formData, setFormData] = useState({
     id: uuidv4(),
     name: "",
+    description: "",
+    thumbnail: null as File | null,
     links: {
       website: "",
       twitter: "",
@@ -37,10 +38,9 @@ const ProjectForm = () => {
       setContributorName("Unknown");
     }
   }, []);
-  
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -70,10 +70,12 @@ const ProjectForm = () => {
         value.forEach((item, index) => {
           formPayload.append(`${key}[${index}]`, item);
         });
-      } else if (typeof value === "object" && value !== null) {
+      } else if (typeof value === "object" && value !== null && !(value instanceof File)) {
         Object.entries(value).forEach(([subKey, subVal]) => {
           formPayload.append(`${key}.${subKey}`, String(subVal));
         });
+      } else if (value instanceof File) {
+        formPayload.append(key, value);
       } else {
         formPayload.append(key, value as string);
       }
@@ -104,15 +106,37 @@ const ProjectForm = () => {
         onChange={handleChange}
       />
 
+      <textarea
+        name="description"
+        placeholder="Description"
+        className="p-3 rounded bg-gray-800 text-white"
+        rows={4}
+        value={formData.description}
+        onChange={handleChange}
+      />
+
+      <label className="cursor-pointer bg-gray-800 hover:bg-orange-700 text-white text-sm px-5 py-3 rounded-md transition shadow-md w-full text-center">
+        Upload Thumbnail
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) setFormData((prev) => ({ ...prev, thumbnail: file }));
+          }}
+        />
+      </label>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {["website", "twitter", "github", "nostr"].map((field) => (
+        {(["website", "twitter", "github", "nostr"] as const).map((field) => (
           <input
             key={field}
             type="text"
             placeholder={`${field.charAt(0).toUpperCase() + field.slice(1)} URL`}
             className="p-3 rounded bg-gray-800 text-white"
-            value={formData.links[field as keyof typeof formData.links]}
-            onChange={(e) => handleLinkChange(field as keyof typeof formData.links, e.target.value)}
+            value={formData.links[field]}
+            onChange={(e) => handleLinkChange(field, e.target.value)}
           />
         ))}
       </div>
@@ -142,9 +166,6 @@ const ProjectForm = () => {
             </option>
           ))}
         </select>
-
-
-
       </div>
 
       <div className="flex flex-col gap-2">

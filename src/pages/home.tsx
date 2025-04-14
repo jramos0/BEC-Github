@@ -96,6 +96,12 @@ const Home = () => {
 
       {accessToken ? (
         <>
+        <button
+        onClick={() => navigate('/dashboard')}
+        className="absolute top-4 right-4 bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded shadow-md text-sm"
+      >
+        Dashboard
+      </button>
           {userData ? (
             <div>
               <h3 className="text-3xl mb-6">
