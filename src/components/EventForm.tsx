@@ -7,12 +7,13 @@ import { useNavigate } from "react-router-dom";
 const apiKey = import.meta.env.VITE_TIMEZONEDB_KEY;
 import axios from "axios";
 import { supportedLanguages } from "../constants/languages";
+import { supportedTags } from "../constants/tags";
 
 
 const EventForm = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    category: "Events",
+    resourceCategory: "Events",
     id: uuidv4(),
     start_date: new Date(),
     end_date: new Date(),
@@ -239,14 +240,19 @@ const EventForm = () => {
 
   <div className="flex gap-2">
     {formData.tags.map((tag, index) => (
-      <input
-        key={index}
-        type="text"
-        placeholder={`Tag ${index + 1}`}
-        className="p-3 rounded bg-gray-800 text-white flex-1"
-        value={tag}
-        onChange={(e) => handleTagChange(index, e.target.value)}
-      />
+      <select
+          key={index}
+          className="p-3 rounded bg-gray-800 text-white"
+          value={tag}
+          onChange={(e) => handleTagChange(index, e.target.value)}
+        >
+          <option value= "">Select a tag</option>
+          {supportedTags.map((tag) => (
+            <option key={tag} value={tag}>
+              {tag}
+            </option> 
+          ))}
+        </select>
     ))}
   </div>
 

@@ -46,3 +46,16 @@ export interface ProfessorData {
     bio: string;
     short_bio: string;
 }
+
+export interface ProjectData {
+    id: string,
+    name: string,
+    description: string,
+    'links.website': string,
+    'links.twitter': string,
+    'links.github': string,
+    'links.nostr': string,
+    category: string,
+    original_language: string,
+    tags: string[],
+}
