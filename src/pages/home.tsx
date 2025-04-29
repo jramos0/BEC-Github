@@ -7,7 +7,7 @@ import LoadingSpinner from '../components/atoms/LoadingSpinner';
 const Home = () => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [userData, setUserData] = useState<GitHubUser | null>(null);
-  const [userFork, setUserFork] = useState<string| null>(null);
+  
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -39,12 +39,9 @@ const Home = () => {
     }
   }, []);
 
-  // Obtener datos del usuario
   useEffect(() => {
     async function getUserData() {
       if (!accessToken) return;
-      setLoading(true);
-
       const response = await fetch('http://localhost:4000/getUserData', {
         method: 'GET',
         headers: {
@@ -53,27 +50,76 @@ const Home = () => {
       });
 
       const data = await response.json();
-      console.log('GitHub User:', data);
-
-      const forkReq= await fetch('http://localhost:4000/manage/forks',{
-        method: "GET",
-        headers: {
-          Authorization: "Bearer " + accessToken,
-        },
-      });
-
-      const forkRes = await forkReq.json();
-      setUserFork(forkRes)
       setUserData(data);
-      localStorage.setItem("username", data.login);
-      setLoading(false);
+      const lastExecution = localStorage.getItem("lastForkExecution");
+      const oneHour = 60 * 60 * 1000;
+  
+      // Si la última ejecución fue hace menos de una hora, no ejecutar de nuevo
+      if (lastExecution && Date.now() - parseInt(lastExecution) < oneHour) {
+        console.log("⏳ Esperando 1 hora antes de volver a ejecutar fork sync...");
+        return;
+      }
+  
+      setLoading(true);
+  
+      try {
+        
+        localStorage.setItem("username", data.login);
+  
+        const forkReq = await fetch('http://localhost:4000/manage/forks', {
+          method: "GET",
+          headers: {
+            Authorization: "Bearer " + accessToken,
+          },
+        });
+  
+        const forkRes = await forkReq.json();
+        console.log(forkRes)
+  
+        // Guardar la hora actual como última ejecución
+        localStorage.setItem("lastForkExecution", Date.now().toString());
+      } catch (error) {
+        console.error("❌ Error fetching user data or fork:", error);
+      } finally {
+        setLoading(false);
+      }
     }
-
+  
     getUserData();
   }, [accessToken]);
+  
+
+  // useEffect(() => {
+  //   if (!accessToken) return;
+
+  //   const interval = setInterval(async () => {
+  //     try {
+  //       console.log("Checking...")
+  //       const res = await fetch('http://localhost:4000/manage/checkPR', {
+  //         method: 'GET',
+  //         headers: {
+  //           Authorization: 'Bearer ' + accessToken,
+  //         },
+  //       });
+
+  //       const data = await res.json();
+  //       if (data.message?.includes("Fork eliminado")) {
+  //         alert("Your session has ended. Please sign in again.");
+  //         handleLogout(); // Cierra sesión automáticamente
+  //       }
+  //     } catch (err) {
+  //       console.error("Error checking PR status:", err);
+  //     }
+  //   }, 30000); // 30 segundos
+
+  //   // Limpieza cuando se desmonta el componente o cambia el token
+  //   return () => clearInterval(interval);
+  // }, [accessToken]);
+
 
   const handleLogout = () => {
     localStorage.removeItem('accessToken');
+    localStorage.removeItem('username')
     setAccessToken(null);
     setUserData(null);
     window.location.replace('/');
@@ -106,9 +152,6 @@ const Home = () => {
             <div>
               <h3 className="text-3xl mb-6">
               Welcome <strong>{userData.login}</strong>
-            </h3>
-            <h3 className="text-3xl mb-6">
-              Your Fork {userFork}
             </h3>
             </div>
           ) : (

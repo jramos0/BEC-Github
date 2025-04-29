@@ -7,8 +7,8 @@ dotenv.config();
 
 const router: Router = express.Router();
 
-const CLIENT = process.env.GITHUB_CLIENT_ID!;
-const SECRET = process.env.GITHUB_CLIENT_SECRET!;
+const CLIENT = process.env.GITHUB_CLIENT_ID;
+const SECRET = process.env.GITHUB_CLIENT_SECRET;
 
 const usedCodes = new Set<string>();
 
