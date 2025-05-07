@@ -23,6 +23,8 @@ const ProfessorForm = () => {
     bio: string;
     short_bio: string;
     thumbnail: File | null;
+    githubUser: string;
+    githubToken: string;
   };
   const [formData, setFormData] = useState<ProfessorFormData>({
     resourceCategory: "Professor",
@@ -40,6 +42,8 @@ const ProfessorForm = () => {
     bio: "",
     short_bio: "",
     thumbnail: null as File | null,
+    githubUser: "",
+    githubToken: "",
   });
 
   
@@ -72,16 +76,8 @@ const ProfessorForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    let githubUser = null;
-    try {
-      const userRes = await fetch("http://localhost:4000/api/user", {
-        credentials: "include",
-      });
-      const userData = await userRes.json();
-      githubUser = userData.user ? userData.user.username : "Unknown";
-    } catch (err) {
-      console.error("Error getting user:", err);
-    }
+    const githubUser = localStorage.getItem('username');
+    const githubToken = localStorage.getItem('accessToken');
 
     const finalData = {
       ...formData,
@@ -94,7 +90,8 @@ const ProfessorForm = () => {
       tips: {
         lightning_address: formData.lightning_address,
       },
-      submitted_by: githubUser,
+      githubUser: githubUser,
+      githubToken: githubToken,
     };
 
     const formPayload = new FormData();

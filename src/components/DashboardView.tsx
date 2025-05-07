@@ -15,7 +15,7 @@ function DashboardView() {
 
   const TOKEN = localStorage.getItem('accessToken');
   const REPO_OWNER = "jramos0";
-  const REPO_NAME = "BEC-Github";
+  const REPO_NAME = "bitcoin-educational-content";
   const USERNAME = localStorage.getItem('username');
 
   useEffect(() => {

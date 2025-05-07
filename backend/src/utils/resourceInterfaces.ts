@@ -14,6 +14,8 @@ export interface EventData {
     project_id: string;
     tags: string[];
     category: string;
+    githubUser: string;
+    githubToken: string;
 }
 
 export interface NewsletterData {
@@ -29,6 +31,8 @@ export interface NewsletterData {
     contributor_names: string[];
     tags: string[];
     thumbnail: File | null;
+    githubUser: string;
+    githubToken: string;
 }
 
 export interface ProfessorData {
@@ -45,6 +49,8 @@ export interface ProfessorData {
     tags: string[];
     bio: string;
     short_bio: string;
+    githubUser: string;
+    githubToken: string;
 }
 
 export interface ProjectData {
@@ -58,4 +64,6 @@ export interface ProjectData {
     category: string,
     original_language: string,
     tags: string[],
+    githubUser: string;
+    githubToken: string;
 }

@@ -21,6 +21,8 @@ const NewsletterForm = () => {
     contributor_names: [""],
     tags: ["", ""],
     thumbnail: null as File | null,
+    githubUser: "",
+    githubToken: "",
   });
 
   const levels = ["beginner", "intermediate", "expert"];
@@ -38,18 +40,10 @@ const NewsletterForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    let githubUser = null;
-    try {
-      const userRes = await fetch("http://localhost:4000/api/user", {
-        credentials: "include",
-      });
-      const userData = await userRes.json();
-      githubUser = userData.user ? userData.user.username : "Unknown";
-    } catch (err) {
-      console.error("Error getting user:", err);
-    }
+    const githubUser = localStorage.getItem('username');
+    const githubToken = localStorage.getItem('accessToken');
 
-    const finalData = { ...formData, submitted_by: githubUser };
+    const finalData = { ...formData, githubUser: githubUser, githubToken: githubToken };
 
     const formPayload = new FormData();
     Object.entries(finalData).forEach(([key, value]) => {

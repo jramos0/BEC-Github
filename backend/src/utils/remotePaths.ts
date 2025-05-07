@@ -5,16 +5,16 @@ export default async function getRemotePath(data: any): Promise <string | undefi
     switch(resourceCategory)
     {
         case "Events":
-            remotePath = "https://github.com/jramos0/bitcoin-educational-content/tree/dev/events";
+            remotePath = "events/";
             break;
         case "Newsletter":
-            remotePath = "https://github.com/jramos0/bitcoin-educational-content/tree/dev/resources/newsletters";
+            remotePath = "resources/newsletters/";
             break;
         case "Professor":
-            remotePath = "https://github.com/jramos0/bitcoin-educational-content/tree/dev/professors";
+            remotePath = "professors/";
             break;
         case "Project":
-            remotePath = "https://github.com/jramos0/bitcoin-educational-content/tree/dev/resources/projects";
+            remotePath = "resources/projects/";
             break;
         default:
             console.error("Error retrieving remote path.")

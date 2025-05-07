@@ -30,6 +30,8 @@ const ProjectForm = () => {
     category: "Education",
     original_language: "en",
     tags: ["", "", ""],
+    githubUser: "",
+    githubToken: "",
   });
 
   useEffect(() => {
@@ -60,10 +62,14 @@ const ProjectForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const githubUser = localStorage.getItem('username');
+    const githubToken = localStorage.getItem('accessToken');
+
     const finalData = {
       ...formData,
       contributor_names: [contributorName],
-      submitted_by: contributorName
+      githubUser: githubUser,
+      githubToken: githubToken,
     };
 
     const formPayload = new FormData();

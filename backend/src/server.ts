@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import resourceParser from "./utils/resourceParser";
 import githubAuth from './githubAuth';
 import githubManage from './githubManage';
+import branchManagement from './branchManagement';
 dotenv.config();
 
 const app = express();
@@ -24,11 +25,11 @@ const upload = multer({storage : storage});
 app.post("/", upload.single('thumbnail'), async (req, res)=>{
   try{
   console.log("Data received: ", req.body);
-  resourceParser(req.body, req.file)
+  const prResponse = await resourceParser(req.body, req.file)
   res.status(200).send();
   } catch(error){
     console.error("Error receiving data: ", error);
-    res.status(500).send();
+    res.status(500).send(res.json);
   }
 });
 
@@ -41,6 +42,8 @@ app.get("/", (req, res) => {
 app.use('/', githubAuth);
 
 app.use("/manage/", githubManage );
+
+app.use("/", branchManagement);
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);

@@ -1,10 +1,11 @@
 import yaml from "yaml";
 import fs from "node:fs/promises";
 import * as dirManager from "./dirManager";
-import * as resourceInterfaces from "./resourceInterfaces";
 import imageManager from "./imageManager";
-import { format } from "date-fns";
+import * as PRManagement from '../prManagement';
+import * as resourceInterfaces from "./resourceInterfaces";
 import remotePath from "./remotePaths";
+import { format } from "date-fns";
 
 //Identifica el tipo de recurso
 export default function resourceIdentifier(data: any, image: any) {
@@ -28,7 +29,7 @@ export default function resourceIdentifier(data: any, image: any) {
 }
 
 //Parsing para la categoría eventos
-async function parseEvents(data: resourceInterfaces.EventData, image: any): Promise<void> {
+async function parseEvents(data: resourceInterfaces.EventData, image: any): Promise<any> {
     const formatDate = (dateStr: string) => {
         return format(new Date(dateStr), "yyyy-MM-dd HH:mm:ss");
     };
@@ -60,15 +61,21 @@ async function parseEvents(data: resourceInterfaces.EventData, image: any): Prom
         await fs.writeFile(`${parentPath}/event.yml`, yamlData, 'utf8');
         console.log(`Archivo YAML creado exitosamente en: ${parentPath}/event.yml`);
 
-        imageManager(image, childPath, "thumbnail");
+        await imageManager(image, childPath, "thumbnail");
 
         const remote = await remotePath(data);
         console.log("Remote Path for the processed resource category: " + remote);
+
+        const branchName = await PRManagement.branchNameCreator(data.githubUser, data.name);
+        const branchData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName};
+        const commitData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.name};
+    
+        await PRManagement.createPR(branchData, commitData);
+
     } catch (error) {
         console.error("Error processing data: ", error);
     }
 }
-
 //Parsing para la categoría Newsletter
 async function parseNewsletter(data: resourceInterfaces.NewsletterData, image: any): Promise<void> {
     const formatDate = (dateStr: string) => {
@@ -102,6 +109,12 @@ async function parseNewsletter(data: resourceInterfaces.NewsletterData, image: a
 
         const remote = await remotePath(data);
         console.log("Remote Path for the processed resource category: " + remote);
+
+        const branchName = await PRManagement.branchNameCreator(data.githubUser, data.title);
+        const branchData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName};
+        const commitData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.title};
+    
+        await PRManagement.createPR(branchData, commitData);
     }catch(error){
         console.error("Error processing data: ", error);
     }
@@ -143,6 +156,12 @@ async function parseProfessor(data: resourceInterfaces.ProfessorData, image: any
 
         const remote = await remotePath(data);
         console.log("Remote Path for the processed resource category: " + remote);
+
+        const branchName = await PRManagement.branchNameCreator(data.githubUser, data.name);
+        const branchData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName};
+        const commitData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.name};
+    
+        await PRManagement.createPR(branchData, commitData);
     }catch(error){
         console.error("Error processing data: ", error);
     }
@@ -178,6 +197,12 @@ async function parseProjects(data: resourceInterfaces.ProjectData, image: any): 
 
         const remote = await remotePath(data);
         console.log("Remote Path for the processed resource category: " + remote);
+
+        const branchName = await PRManagement.branchNameCreator(data.githubUser, data.name);
+        const branchData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName};
+        const commitData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.name};
+
+        await PRManagement.createPR(branchData, commitData);
     } catch(error){
         console.error(error);
         console.log(data);

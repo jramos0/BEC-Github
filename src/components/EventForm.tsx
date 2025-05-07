@@ -26,6 +26,8 @@ const EventForm = () => {
     language2: "",
     website: "",
     tags: ["", "", ""],
+    githubUser: "",
+    githubToken: "",
     thumbnail: null as File | null,
   });
 
@@ -43,18 +45,6 @@ const EventForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
-    // Obtener el usuario autenticado desde el backend
-    let githubUser = null;
-    try {
-      const userResponse = await fetch("http://localhost:4000/api/user", {
-        credentials: "include",
-      });
-      const userData = await userResponse.json();
-      githubUser = userData.user ? userData.user.username : "Unknown";
-    } catch (error) {
-      console.error("Error fetching GitHub user:", error);
-    }
   
     // Obtener timezone usando Nominatim + TimeZoneDB
     let timezone = moment.tz.guess(); // fallback si todo falla 
@@ -87,8 +77,11 @@ const EventForm = () => {
       console.error("Error fetching timezone from OSM/TimeZoneDB:", error);
     }
 
+    const githubUser = localStorage.getItem('username');
+    const githubToken = localStorage.getItem('accessToken');
+    
     // Crear el objeto final incluyendo el usuario autenticado de GitHub
-    const finalData = { ...formData, timezone, submitted_by: githubUser };
+    const finalData = { ...formData, timezone, githubUser: githubUser, githubToken: githubToken};
     console.log(finalData);
 
     //Enviar finalData al server
