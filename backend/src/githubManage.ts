@@ -9,7 +9,11 @@ const router: Router = express.Router();
 const CLIENT = process.env.GITHUB_CLIENT_ID!;
 const SECRET = process.env.GITHUB_CLIENT_SECRET!;
 const UPSTREAM_OWNER = "jramos0";
-const REPO = "BEC-Github";
+const REPO = "bitcoin-educational-content";
+interface Branch {
+  name: string;
+}
+
 
 router.use(cors());
 router.use(express.json());
@@ -102,7 +106,7 @@ router.get('/forks', async (req: Request, res: Response): Promise<void> => {
     }
 
     // 3. Si la rama no existe, crearla desde main del fork
-    const mainRefResp = await fetch(`https://api.github.com/repos/${userLogin}/${REPO}/git/refs/heads/main`, {
+    const mainRefResp = await fetch(`https://api.github.com/repos/${userLogin}/${REPO}/git/refs/heads/dev`, {
       headers: { Authorization }
     });
 
@@ -147,5 +151,110 @@ router.get('/forks', async (req: Request, res: Response): Promise<void> => {
     }
   }
 });
+
+router.get('/branches', async (req: Request, res: Response): Promise<void> => {
+  const Authorization = req.get("Authorization") as string;
+
+  try {
+
+    const userResp = await fetch("https://api.github.com/user", { headers: { Authorization } });
+    if (!userResp.ok) {
+      throw new Error(`Error al obtener el usuario: ${userResp.status}`);
+    }
+    const userData = await userResp.json();
+    const userLogin: string = userData.login;
+
+
+    const branchResp = await fetch(
+      `https://api.github.com/repos/${userLogin}/${REPO}/branches`,
+      {
+        headers: {
+          Authorization,
+          'Content-Type': 'application/vnd.github.v3+json'
+        }
+      }
+    );
+    if (!branchResp.ok) {
+      throw new Error(`Error al obtener las ramas: ${branchResp.status}`);
+    }
+    const branches: Branch[] = await branchResp.json();
+    const filteredBranches = branches
+      .map((branch: Branch) => branch.name)
+      .filter((branchName: string) => branchName.includes(`${userLogin}-`));
+
+    res.json(filteredBranches);
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(`❌ Error:`, error.message);
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "❌ Error desconocido" });
+    }
+  }
+});
+
+
+
+router.post('/deletebranch', async (req: Request, res: Response): Promise<void> => {
+  const Authorization = req.get("Authorization") as string;
+  const { branchName } = req.body; 
+  if (!branchName) {
+    res.status(400).json({ error: "Falta el nombre de la rama en el body" });
+    return;
+  }
+
+  try {
+    // 1. Obtener información del usuario autenticado
+    const userResp = await fetch("https://api.github.com/user", { headers: { Authorization } });
+    if (!userResp.ok) {
+      throw new Error(`Error al obtener el usuario: ${userResp.status}`);
+    }
+    const userData = await userResp.json();
+    const userLogin: string = userData.login;
+
+  
+    const prUrl = `https://api.github.com/repos/${userLogin}/${REPO}/pulls?state=closed&head=${userLogin}:${branchName}`;
+    const prResp = await fetch(prUrl, { 
+      headers: { 
+        Authorization, 
+        'Content-Type': 'application/vnd.github.v3+json'
+      }
+    });
+    if (!prResp.ok) {
+      throw new Error(`Error al obtener pull requests: ${prResp.status}`);
+    }
+    const pullRequests: any[] = await prResp.json();
+
+    
+    // const prMergeado = pullRequests.find(pr => pr.merged_at !== null);
+    // if (!prMergeado) {
+    //   res.status(400).json({ error: "No se encontró un pull request mergeado para la rama especificada" });
+    //   return;
+    // }
+
+   
+    const deleteUrl = `https://api.github.com/repos/${userLogin}/${REPO}/git/refs/heads/${branchName}`;
+    const deleteResp = await fetch(deleteUrl, {
+      method: "DELETE",
+      headers: { Authorization }
+    });
+
+    if (deleteResp.ok) {
+      res.json({ message: `La rama "${branchName}" ha sido eliminada correctamente.` });
+    } else {
+      console.error("Error al eliminar la rama:", deleteResp.status);
+      res.status(deleteResp.status).json({ error: "No se pudo eliminar la rama" });
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("❌ Error:", error.message);
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "Error desconocido" });
+    }
+  }
+});
+
+
 
 export default router;

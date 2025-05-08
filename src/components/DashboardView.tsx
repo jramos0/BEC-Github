@@ -13,6 +13,14 @@ function DashboardView() {
     draft: false as Boolean,
   }]);
 
+  const [activeBranches,setActiveBranches] = useState<string[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedBranch, setSelectedBranch] = useState<string>('');
+  const [deleteMessage, setDeleteMessage] = useState<string>('');
+
+
+
   const TOKEN = localStorage.getItem('accessToken');
   const REPO_OWNER = "jramos0";
   const REPO_NAME = "bitcoin-educational-content";
@@ -37,12 +45,110 @@ function DashboardView() {
     fetchPRs();
 }, []);
 
+  useEffect(()=>{
+    const getBranches = async () =>{
+      try {
+         const response = await fetch("http://localhost:4000/manage/branches",{
+          method: 'GET',
+          headers: { Authorization: `token ${TOKEN}` },
+         })
+         if (!response.ok) {
+          throw new Error(`Error al obtener ramas: ${response.status}`);
+        }
+
+         const jsonData: string[] = await response.json()
+
+         setActiveBranches(jsonData)
+      }catch(err: unknown){
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('Error desconocido');
+        }
+      }finally {
+        setLoading(false);
+      }
+    }
+    getBranches();
+  },[]);
+
+  const deleteBranch = async () => {
+    if (!selectedBranch) {
+      setDeleteMessage('Selecciona una rama para eliminar.');
+      return;
+    }
+    try {
+      const response = await fetch("http://localhost:4000/manage/deletebranch", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `bearer ${TOKEN}`,
+        },
+        body: JSON.stringify({ branchName: selectedBranch })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error al eliminar la rama: ${response.status}`);
+      }
+
+      const result = await response.json();
+      setDeleteMessage(result.message || 'Rama eliminada correctamente.');
+
+      // Actualiza la lista de ramas eliminando la rama borrada
+      setActiveBranches(prev => prev.filter(branch => branch !== selectedBranch));
+      setSelectedBranch('');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setDeleteMessage(`Error: ${err.message}`);
+      } else {
+        setDeleteMessage('Error desconocido al eliminar la rama.');
+      }
+    }
+  };
+
+
   const handleClick = (id: string) => {
     navigate(`/dashboard/pr/${id}`); // Aquí se redirigirá a la vista individual del PR
   };
 
   return (
     <div>
+       <div className="rounded-lg shadow-xl">
+        <h1 className="text-2xl font-bold mb-4">Select a Branch</h1>
+        {loading ? (
+          <p className="text-black-500">Cargando ramas...</p>
+        ) : error ? (
+          <p className="text-red-500">Error: {error}</p>
+        ) : (
+          <>
+          <select
+          value={selectedBranch}
+          onChange={(e) => setSelectedBranch(e.target.value)}
+          className=" text-white bg-black p-2 border border-white-300 rounded focus:border-blue-500 focus:outline-none"
+          >
+            <option value="" disabled>
+            Expand to choose a branch
+            </option>
+            {activeBranches.map((activeBranches) => (
+              <option key={activeBranches} value={activeBranches}>
+                {activeBranches}
+              </option>
+            ))}
+          </select>
+          <button
+              onClick={deleteBranch}
+              className="w-full bg-red-500 text-white py-2 rounded hover:bg-red-600 transition-colors"
+            >
+              Eliminar Rama
+            </button>
+            {deleteMessage && (
+              <p className={`mt-4 ${deleteMessage.startsWith('Error') ? 'text-red-500' : 'text-green-500'}`}>
+                {deleteMessage}
+              </p>
+            )}
+          </>
+        )}
+       </div>
       <h2 className="text-2xl font-bold mb-2">Your Draft Pull Requests</h2>
       {pullRequests.filter(pr=> pr.draft && pr.state == "open").length === 0 ? (
         <p className="text-gray-400 mb-6">No "draft" PRs found.</p>
