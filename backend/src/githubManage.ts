@@ -197,7 +197,7 @@ router.get('/branches', async (req: Request, res: Response): Promise<void> => {
 
 router.post('/deletebranch', async (req: Request, res: Response): Promise<void> => {
   const Authorization = req.get("Authorization") as string;
-  const { branchName } = req.body; 
+  const { branchName } = req.body;
   if (!branchName) {
     res.status(400).json({ error: "Falta el nombre de la rama en el body" });
     return;
@@ -212,11 +212,11 @@ router.post('/deletebranch', async (req: Request, res: Response): Promise<void> 
     const userData = await userResp.json();
     const userLogin: string = userData.login;
 
-  
+
     const prUrl = `https://api.github.com/repos/${userLogin}/${REPO}/pulls?state=closed&head=${userLogin}:${branchName}`;
-    const prResp = await fetch(prUrl, { 
-      headers: { 
-        Authorization, 
+    const prResp = await fetch(prUrl, {
+      headers: {
+        Authorization,
         'Content-Type': 'application/vnd.github.v3+json'
       }
     });
@@ -225,14 +225,26 @@ router.post('/deletebranch', async (req: Request, res: Response): Promise<void> 
     }
     const pullRequests: any[] = await prResp.json();
 
+
+    // Debug: ver qué información se está recibiendo para cada PR
+    console.log("Pull requests recibidos:", pullRequests);
+    pullRequests.forEach(pr => {
+      console.log(`PR #${pr.number} - estado: ${pr.state} - merged_at: ${pr.merged_at}`);
+    });
+
     
+    const prMergeado = pullRequests.find(pr => pr.merged_at !== null);
+
+    if (!prMergeado) {
+      throw new Error("No se encontró un pull request mergeado para la rama especificada");
+    }
+
     // const prMergeado = pullRequests.find(pr => pr.merged_at !== null);
     // if (!prMergeado) {
     //   res.status(400).json({ error: "No se encontró un pull request mergeado para la rama especificada" });
     //   return;
     // }
 
-   
     const deleteUrl = `https://api.github.com/repos/${userLogin}/${REPO}/git/refs/heads/${branchName}`;
     const deleteResp = await fetch(deleteUrl, {
       method: "DELETE",
