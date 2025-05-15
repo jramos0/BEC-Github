@@ -20,6 +20,7 @@ function DashboardView() {
   const [error, setError] = useState<string | null>(null);
   const [selectedBranch, setSelectedBranch] = useState<string>('');
   const [deleteMessage, setDeleteMessage] = useState<string>('');
+   const [updateStatus, setUpdateStatus] = useState<string | null>(null);
 
 
 
@@ -47,66 +48,93 @@ function DashboardView() {
     fetchPRs();
 }, []);
 
-  useEffect(()=>{
-    const getBranches = async () =>{
+  useEffect(() => {
+      const getBranches = async () => {
+        try {
+          const response = await fetch("http://localhost:4000/manage/branches", {
+            method: 'GET',
+            headers: { Authorization: `token ${TOKEN}` },
+          });
+          if (!response.ok) {
+            throw new Error(`Error al obtener ramas: ${response.status}`);
+          }
+  
+          const jsonData: string[] = await response.json();
+          setActiveBranches(jsonData);
+        } catch (err: unknown) {
+          if (err instanceof Error) {
+            setError(err.message);
+          } else {
+            setError('Error desconocido');
+          }
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      getBranches();
+    }, []);
+  
+    const deleteBranch = async () => {
+      if (!selectedBranch) {
+        setDeleteMessage('Selecciona una rama para eliminar.');
+        return;
+      }
+  
       try {
-         const response = await fetch("http://localhost:4000/manage/branches",{
-          method: 'GET',
-          headers: { Authorization: `token ${TOKEN}` },
-         })
-         if (!response.ok) {
-          throw new Error(`Error al obtener ramas: ${response.status}`);
+        const response = await fetch("http://localhost:4000/manage/deletebranch", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `bearer ${TOKEN}`,
+          },
+          body: JSON.stringify({ branchName: selectedBranch }),
+        });
+  
+        if (!response.ok) {
+          throw new Error(`Error al eliminar la rama: ${response.status}`);
         }
-
-         const jsonData: string[] = await response.json()
-
-         setActiveBranches(jsonData)
-      }catch(err: unknown){
+  
+        const result = await response.json();
+        setDeleteMessage(result.message || 'Rama eliminada correctamente.');
+        setActiveBranches(prev => prev.filter(branch => branch !== selectedBranch));
+        setSelectedBranch('');
+      } catch (err: unknown) {
         if (err instanceof Error) {
-          setError(err.message);
+          setDeleteMessage(`Error: ${err.message}`);
         } else {
-          setError('Error desconocido');
+          setDeleteMessage('Error desconocido al eliminar la rama.');
         }
-      }finally {
-        setLoading(false);
       }
-    }
-    getBranches();
-  },[]);
-
-  const deleteBranch = async () => {
-    if (!selectedBranch) {
-      setDeleteMessage('Selecciona una rama para eliminar.');
-      return;
-    }
-    try {
-      const response = await fetch("http://localhost:4000/manage/deletebranch", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `bearer ${TOKEN}`,
-        },
-        body: JSON.stringify({ branchName: selectedBranch })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error al eliminar la rama: ${response.status}`);
+    };
+  
+    const markAsReady = async (branchName: string) => {
+      try {
+        const response = await fetch("http://localhost:4000/manage/updatepr", {
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${TOKEN}`,
+          },
+          body: JSON.stringify({ branchName }),
+        });
+  
+        const data = await response.json();
+  
+        if (!response.ok) {
+          throw new Error(data.error || 'Error desconocido');
+        }
+  
+        setUpdateStatus(data.message || '✅ PR marcado como Ready for Review');
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setUpdateStatus(`❌ Error: ${err.message}`);
+        } else {
+          setUpdateStatus('❌ Error desconocido al actualizar el PR.');
+        }
       }
-
-      const result = await response.json();
-      setDeleteMessage(result.message || 'Rama eliminada correctamente.');
-
-      // Actualiza la lista de ramas eliminando la rama borrada
-      setActiveBranches(prev => prev.filter(branch => branch !== selectedBranch));
-      setSelectedBranch('');
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setDeleteMessage(`Error: ${err.message}`);
-      } else {
-        setDeleteMessage('Error desconocido al eliminar la rama.');
-      }
-    }
-  };
+    };
+  
 
 
   const handleClick = (id: string) => {
@@ -146,15 +174,28 @@ function DashboardView() {
               >
                 Eliminar Rama
               </button>
+              <button
+              onClick={() => {
+                if (!selectedBranch) {
+                  setUpdateStatus('❌ Selecciona una rama antes de marcar como ready.');
+                  return;
+                }
+                markAsReady(selectedBranch);
+              }}
+              className="bg-green-600 text-white py-2 px-7 rounded hover:bg-green-700 transition-colors rounded shadow"
+            >
+              Marcar como Ready for Review
+            </button>
             </div>
 
-            {deleteMessage && (
+            {(deleteMessage || updateStatus) && (
               <p
-                className={`mt-4 ${
-                  deleteMessage.startsWith('Error') ? 'text-red-500' : 'text-green-500'
-                }`}
+                className={`mt-4 ${(deleteMessage?.startsWith('Error') || updateStatus?.startsWith('❌'))
+                    ? 'text-red-500'
+                    : 'text-green-500'
+                  }`}
               >
-                {deleteMessage}
+                {deleteMessage || updateStatus}
               </p>
             )}
           </>
