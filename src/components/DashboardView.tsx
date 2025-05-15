@@ -1,6 +1,8 @@
 // src/components/DashboardView.tsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { GitBranch } from "lucide-react";
+
 
 function DashboardView() {
   const navigate = useNavigate();
@@ -10,7 +12,7 @@ function DashboardView() {
     created_at: "",
     resource_type: "",
     state: "",
-    draft: false as Boolean,
+    draft: false as boolean,
   }]);
 
   const [activeBranches,setActiveBranches] = useState<string[]>([]);
@@ -121,32 +123,42 @@ function DashboardView() {
           <p className="text-red-500">Error: {error}</p>
         ) : (
           <>
-          <select
-          value={selectedBranch}
-          onChange={(e) => setSelectedBranch(e.target.value)}
-          className=" text-white bg-black p-2 border border-white-300 rounded focus:border-blue-500 focus:outline-none"
-          >
-            <option value="" disabled>
-            Expand to choose a branch
-            </option>
-            {activeBranches.map((activeBranches) => (
-              <option key={activeBranches} value={activeBranches}>
-                {activeBranches}
-              </option>
-            ))}
-          </select>
-          <button
-              onClick={deleteBranch}
-              className="w-full bg-red-500 text-white py-2 rounded hover:bg-red-600 transition-colors"
-            >
-              Eliminar Rama
-            </button>
+            <div className="bg-gray-900 p-6 rounded-lg flex flex-col md:flex-row items-center justify-between gap-4 mb-10 border border-gray-700">
+              <div className="flex items-center gap-3 flex-1 w-full">
+                <GitBranch className="text-orange-400 w-5 h-5 shrink-0 mt-1" />
+                <div className="w-full">
+                  <label className="block text-sm text-gray-400 mb-2">Branch seleccionada</label>
+                  <select
+                    value={selectedBranch}
+                    onChange={(e) => setSelectedBranch(e.target.value)}
+                    className="w-full bg-black text-white border border-gray-600 px-4 py-2 rounded focus:ring-orange-400 focus:outline-none"
+                  >
+                    <option value="" disabled>Elegí una rama</option>
+                    {activeBranches.map(branch => (
+                      <option key={branch} value={branch}>{branch}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <button
+                onClick={deleteBranch}
+                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded shadow transition-all"
+              >
+                Eliminar Rama
+              </button>
+            </div>
+
             {deleteMessage && (
-              <p className={`mt-4 ${deleteMessage.startsWith('Error') ? 'text-red-500' : 'text-green-500'}`}>
+              <p
+                className={`mt-4 ${
+                  deleteMessage.startsWith('Error') ? 'text-red-500' : 'text-green-500'
+                }`}
+              >
                 {deleteMessage}
               </p>
             )}
           </>
+
         )}
        </div>
       <h2 className="text-2xl font-bold mb-2">Your Draft Pull Requests</h2>

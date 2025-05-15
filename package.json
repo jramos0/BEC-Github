@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "axios": "^1.8.3",
+    "lucide-react": "^0.510.0",
     "moment-timezone": "^0.5.47",
     "multer": "1.4.5-lts.2",
     "nodemon": "^3.1.10",

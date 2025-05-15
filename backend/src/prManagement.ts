@@ -40,10 +40,11 @@ export async function createPR(branchData: any, commitData: any): Promise<any> {
                 const fullHead = `${commitData.OWNER}:${commitData.branchName}`
         
                 const payload = {
-                    title: 'Adding new resource', 
+                    title: `Adding ${commitData.resourceName}`, 
                     head: fullHead, 
                     base: 'dev', 
-                    body: `This pull rquest adds resource ${commitData.resourceName}`
+                    body: `This pull rquest adds resource ${commitData.resourceName}`,
+                    draft: true,
                 };
                 
                 const prResponse = await axios.post(`https://api.github.com/repos/${UPSTREAM_OWNER}/${UPSTREAM_REPO}/pulls`, JSON.stringify(payload), {
