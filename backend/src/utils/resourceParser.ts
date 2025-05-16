@@ -1,10 +1,10 @@
 import yaml from "yaml";
 import fs from "node:fs/promises";
-import * as dirManager from "./dirManager";
-import imageManager from "./imageManager";
-import * as PRManagement from '../prManagement';
-import * as resourceInterfaces from "./resourceInterfaces";
-import remotePath from "./remotePaths";
+import * as dirManager from "./dirManager.ts";
+import imageManager from "./imageManager.ts";
+import * as PRManagement from '../prManagement.ts';
+import * as resourceInterfaces from "./resourceInterfaces.ts";
+import remotePath from "./remotePaths.ts";
 import { format } from "date-fns";
 
 //Identifica el tipo de recurso
