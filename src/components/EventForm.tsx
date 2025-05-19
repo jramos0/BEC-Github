@@ -9,6 +9,11 @@ import axios from "axios";
 import { supportedLanguages } from "../constants/languages";
 import { supportedTags } from "../constants/tags";
 
+function convertToUTCFromZone(date: Date, timezone: string): string {
+  const localStr = moment(date).format("YYYY-MM-DD HH:mm");
+  const eventTime = moment.tz(localStr, "YYYY-MM-DD HH:mm", timezone);
+  return eventTime.utc().format("YYYY-MM-DD HH:mm:ss");
+}
 
 const EventForm = () => {
   const navigate = useNavigate();
@@ -45,17 +50,17 @@ const EventForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
-    // Obtener timezone usando Nominatim + TimeZoneDB
-    let timezone = moment.tz.guess(); // fallback si todo falla 
+
+    let timezone = moment.tz.guess();
     const locationQuery = encodeURIComponent(formData.address_city_country);
 
-    try{
+    try {
       const nominatimRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${locationQuery}&format=json&limit=1`, {
         headers: {
-          'User-Agent': 'YourAppName/1.0 (youremail@example.com)' // Requerido por OSM
+          'User-Agent': 'YourAppName/1.0 (youremail@example.com)'
         }
       });
+
       const nominatimData = await nominatimRes.json();
 
       if (nominatimData.length > 0) {
@@ -74,189 +79,95 @@ const EventForm = () => {
         console.warn("No location found in OpenStreetMap");
       }
     } catch (error) {
-      console.error("Error fetching timezone from OSM/TimeZoneDB:", error);
+      console.error("Error fetching timezone:", error);
     }
+
+    const utcStart = convertToUTCFromZone(formData.start_date, timezone);
+    const utcEnd = convertToUTCFromZone(formData.end_date, timezone);
 
     const githubUser = localStorage.getItem('username');
     const githubToken = localStorage.getItem('accessToken');
-    
-    // Crear el objeto final incluyendo el usuario autenticado de GitHub
-    const finalData = { ...formData, timezone, githubUser: githubUser, githubToken: githubToken};
+
+    const finalData = {
+      ...formData,
+      start_date: utcStart,
+      end_date: utcEnd,
+      timezone,
+      githubUser,
+      githubToken,
+    };
+
     console.log(finalData);
 
-    //Enviar finalData al server
-    try{
+    try {
       await axios.post("http://localhost:4000/", finalData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-      })
-      .then(response => {
-        if(response.status === 200) {
-          console.log("Server response: ", response.data)
-          navigate("/");
-        }
-      })
-      .catch(error => console.error('Error:', error));
-    }catch(error){
-      console.error("Error sending data: ", error)
+      });
+
+      navigate("/");
+    } catch (error) {
+      console.error("Error sending data: ", error);
     }
   };
 
   return (
     <form className="w-full max-w-4xl flex flex-col gap-4" onSubmit={handleSubmit}>
-  <input
-    type="text"
-    name="name"
-    placeholder="Event Name"
-    className="p-3 rounded bg-gray-800 text-white"
-    value={formData.name}
-    onChange={handleChange}
-  />
+      <input type="text" name="name" placeholder="Event Name" className="p-3 rounded bg-gray-800 text-white" value={formData.name} onChange={handleChange} />
 
       <div className="flex gap-4">
         <div className="w-1/3">
-          <DatePicker
-            selected={formData.start_date}
-            onChange={(date: Date | null) => {
-              if (date) setFormData({ ...formData, start_date: date });
-            }}
-            showTimeSelect
-            dateFormat="yyyy-MM-dd HH:mm:ss"
-            className="p-3 rounded bg-gray-800 text-white w-full"
-          />
+          <DatePicker selected={formData.start_date} onChange={(date: Date | null) => { if (date) setFormData({ ...formData, start_date: date }); }} showTimeSelect dateFormat="yyyy-MM-dd HH:mm:ss" className="p-3 rounded bg-gray-800 text-white w-full" />
         </div>
 
         <div className="w-1/3">
-          <DatePicker
-            selected={formData.end_date}
-            onChange={(date: Date | null) => {
-              if (date) setFormData({ ...formData, end_date: date });
-            }}
-            showTimeSelect
-            dateFormat="yyyy-MM-dd HH:mm:ss"
-            className="p-3 rounded bg-gray-800 text-white w-full"
-          />
+          <DatePicker selected={formData.end_date} onChange={(date: Date | null) => { if (date) setFormData({ ...formData, end_date: date }); }} showTimeSelect dateFormat="yyyy-MM-dd HH:mm:ss" className="p-3 rounded bg-gray-800 text-white w-full" />
         </div>
 
         <div className="w-1/3 flex items-end">
-          <label
-            title="Upload only horizontal images"
-            className="cursor-pointer bg-gray-800 hover:bg-orange-700 text-white text-sm px-5 py-3 rounded-md transition shadow-md w-full text-center"
-          >
+          <label title="Upload only horizontal images" className="cursor-pointer bg-gray-800 hover:bg-orange-700 text-white text-sm px-5 py-3 rounded-md transition shadow-md w-full text-center">
             Upload Thumbnail
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {  
-                    formData.thumbnail = file;
-                }
-              }}
-            />
+            <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) formData.thumbnail = file; }} />
           </label>
         </div>
       </div>
 
-  <div className="flex gap-4">
-    <input
-      type="text"
-      name="address_city_country"
-      placeholder="City, Country (e.g., Riga, Latvia)"
-      className="p-3 rounded bg-gray-800 text-white w-full"
-      value={formData.address_city_country}
-      onChange={handleChange}
-    />
+      <div className="flex gap-4">
+        <input type="text" name="address_city_country" placeholder="City, Country (e.g., Riga, Latvia)" className="p-3 rounded bg-gray-800 text-white w-full" value={formData.address_city_country} onChange={handleChange} />
 
-    <select
-      name="type"
-      className="p-3 rounded bg-gray-800 text-white w-full"
-      value={formData.type}
-      onChange={handleChange}
-    >
-      {eventTypes.map((type) => (
-        <option key={type} value={type}>{type}</option>
-      ))}
-    </select>
-  </div>
-
-  <textarea
-    name="description"
-    placeholder="Description"
-    className="p-3 rounded bg-gray-800 text-white w-full"
-    value={formData.description}
-    onChange={handleChange}
-  />
-
-<div className="flex gap-4">
-  <input
-    type="text"
-    name="website"
-    placeholder="Website URL"
-    className="p-3 rounded bg-gray-800 text-white flex-1"
-    value={formData.website}
-    onChange={handleChange}
-  />
-
-<select
-  name="language1"
-  value={formData.language1}
-  onChange={handleChange}
-  className="p-3 rounded bg-gray-800 text-white w-full"
->
-  <option value="">Select Language</option>
-  {Object.entries(supportedLanguages).map(([code, name]) => (
-    <option key={code} value={code}>
-      {name}
-    </option>
-  ))}
-</select>
-
-<select
-  name="language2"
-  value={formData.language2}
-  onChange={handleChange}
-  className="p-3 rounded bg-gray-800 text-white w-full"
->
-<option value="">Select Language</option>
-  {Object.entries(supportedLanguages).map(([code, name]) => (
-    <option key={code} value={code}>
-      {name}
-    </option>
-  ))}
-</select>
-
-</div>
-
-
-  <div className="flex gap-2">
-    {formData.tags.map((tag, index) => (
-      <select
-          key={index}
-          className="p-3 rounded bg-gray-800 text-white"
-          value={tag}
-          onChange={(e) => handleTagChange(index, e.target.value)}
-        >
-          <option value= "">Select a tag</option>
-          {supportedTags.map((tag) => (
-            <option key={tag} value={tag}>
-              {tag}
-            </option> 
-          ))}
+        <select name="type" className="p-3 rounded bg-gray-800 text-white w-full" value={formData.type} onChange={handleChange}>
+          {eventTypes.map((type) => (<option key={type} value={type}>{type}</option>))}
         </select>
-    ))}
-  </div>
+      </div>
 
-  <button
-    type="submit"
-    className="p-3 bg-orange-600 rounded text-white font-semibold hover:bg-blue-700 transition"
-  >
-    Send
-  </button>
-</form>
+      <textarea name="description" placeholder="Description" className="p-3 rounded bg-gray-800 text-white w-full" value={formData.description} onChange={handleChange} />
 
+      <div className="flex gap-4">
+        <input type="text" name="website" placeholder="Website URL" className="p-3 rounded bg-gray-800 text-white flex-1" value={formData.website} onChange={handleChange} />
+
+        <select name="language1" value={formData.language1} onChange={handleChange} className="p-3 rounded bg-gray-800 text-white w-full">
+          <option value="">Select Language</option>
+          {Object.entries(supportedLanguages).map(([code, name]) => (<option key={code} value={code}>{name}</option>))}
+        </select>
+
+        <select name="language2" value={formData.language2} onChange={handleChange} className="p-3 rounded bg-gray-800 text-white w-full">
+          <option value="">Select Language</option>
+          {Object.entries(supportedLanguages).map(([code, name]) => (<option key={code} value={code}>{name}</option>))}
+        </select>
+      </div>
+
+      <div className="flex gap-2">
+        {formData.tags.map((tag, index) => (
+          <select key={index} className="p-3 rounded bg-gray-800 text-white" value={tag} onChange={(e) => handleTagChange(index, e.target.value)}>
+            <option value="">Select a tag</option>
+            {supportedTags.map((tag) => (<option key={tag} value={tag}>{tag}</option>))}
+          </select>
+        ))}
+      </div>
+
+      <button type="submit" className="p-3 bg-orange-600 rounded text-white font-semibold hover:bg-blue-700 transition">Send</button>
+    </form>
   );
 };
 
