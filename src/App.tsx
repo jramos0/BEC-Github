@@ -8,6 +8,9 @@ import Professor from "./pages/professors";
 import Project from "./pages/projects"; 
 import Dashboard from "./pages/dashboard"; 
 import Tutorial from "./pages/tutorials"; 
+import EditResource from "./pages/editResource"; 
+
+
 // import Project from "./pages/project"; (pronto)
 
 const App = () => {
@@ -26,6 +29,7 @@ const App = () => {
         <Route path="/projects" element={<Project />} />
         <Route path="/professor" element={<Professor />} />
         <Route path="/tutorials" element={<Tutorial />} />
+        <Route path="/editResource" element={<EditResource />} />
         <Route path="*" element={<h1 className="text-white text-center mt-10">404 - Page not found</h1>} />
       </Routes>
     </BrowserRouter>

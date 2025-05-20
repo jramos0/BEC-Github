@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import fetch from 'node-fetch';
 
+
 dotenv.config();
 
 const router: Router = express.Router();
@@ -213,7 +214,7 @@ router.post('/deletebranch', async (req: Request, res: Response): Promise<void> 
     const userLogin: string = userData.login;
 
 
-    const prUrl = `https://api.github.com/repos/${userLogin}/${REPO}/pulls?state=closed&head=${userLogin}:${branchName}`;
+    const prUrl = `https://api.github.com/repos/${UPSTREAM_OWNER}/${REPO}/pulls?state=closed&head=${userLogin}:${branchName}`;
     const prResp = await fetch(prUrl, {
       headers: {
         Authorization,
@@ -233,10 +234,10 @@ router.post('/deletebranch', async (req: Request, res: Response): Promise<void> 
     });
 
     
-    const prMergeado = pullRequests.find(pr => pr.merged_at !== null);
+    const prClosed = pullRequests.find(pr => pr.state === "closed");
 
-    if (!prMergeado) {
-      throw new Error("No se encontró un pull request mergeado para la rama especificada");
+    if (!prClosed) {
+      throw new Error("A closed pull request was not found for the specified branch.");
     }
 
     // const prMergeado = pullRequests.find(pr => pr.merged_at !== null);
