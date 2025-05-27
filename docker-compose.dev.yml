@@ -1,5 +1,3 @@
-version: "3"
-
 services:
   frontend:
     build:
@@ -10,6 +8,8 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+    env_file:
+      - .env
     environment:
       - NODE_ENV=development
     command: pnpm dev
@@ -23,6 +23,8 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
+    env_file:
+      - ./backend/.env
     environment:
       - NODE_ENV=development
     command: pnpm dev
