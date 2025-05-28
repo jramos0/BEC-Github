@@ -43,7 +43,7 @@ export async function createPR(branchData: any, commitData: any): Promise<any> {
                     title: `Adding ${commitData.resourceName}`, 
                     head: fullHead, 
                     base: 'dev', 
-                    body: `This pull rquest adds resource ${commitData.resourceName}`,
+                    body: `This pull request adds resource ${commitData.resourceName}`,
                     draft: true,
                 };
                 

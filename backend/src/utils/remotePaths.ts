@@ -16,6 +16,9 @@ export default async function getRemotePath(data: any): Promise <string | undefi
         case "Project":
             remotePath = "resources/projects/";
             break;
+        case "Tutorial":
+            remotePath = "tutorials/"
+            break;
         default:
             console.error("Error retrieving remote path.")
             break;

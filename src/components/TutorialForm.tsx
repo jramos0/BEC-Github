@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 interface Step {
   id: string;
@@ -7,13 +9,14 @@ interface Step {
   images: File[];
 }
 
-const languages = ["Español", "English", "Français", "Deutsch"];
+const languages = {es: "Español", en: "English", fr: "Français", de: "Deutsch"};
 const levels = ["Beginner", "Intermediate", "Advanced"];
 
 const TutorialForm = () => {
+  const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [language, setLanguage] = useState("Español");
+  const [language, setLanguage] = useState("");
   const [level, setLevel] = useState("Beginner");
   const [tags, setTags] = useState<string[]>([]);
   const [author, setAuthor] = useState("");
@@ -39,7 +42,8 @@ const TutorialForm = () => {
     );
   };
 
-  const addStep = () => {
+  const addStep = (e: React.FormEvent) => {
+    e.preventDefault();
     setSteps([...steps, { id: uuidv4(), text: "", images: [] }]);
   };
 
@@ -56,128 +60,197 @@ const TutorialForm = () => {
     steps.forEach((step, i) => {
       content += `## Step ${i + 1}\n\n${step.text}\n\n`;
       step.images.forEach((_, idx) => {
-        content += `![Step ${i + 1} - image ${idx + 1}](assets/tutorial-id/step-${i + 1}-img-${idx + 1}.webp)\n\n`;
+        content += `![Step ${i + 1} - image ${idx + 1}](assets/tutorial-id/${idx + 1}.webp)\n\n`;
       });
     });
     return content;
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    let githubUser;
+    let githubToken;
+    try{
+      githubUser = localStorage.getItem('username')
+      githubToken = localStorage.getItem('accessToken')
+    }catch{
+      console.error('Could not retrieve github user.')
+    }
+
+    const payload = {
+      resourceCategory: 'Tutorial',
+      title: title,
+      language: language,
+      markdown: generateMarkdown(),
+      thumbnail: cover,
+      githubUser: githubUser,
+      githubToken: githubToken,
+    }
+
+    const formPayload = new FormData();
+      Object.entries(payload).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        value.forEach((item, index) => {
+          formPayload.append(`${key}[${index}]`, item);
+        });
+      } else if (value instanceof File) {
+        formPayload.append(key, value);
+      } else {
+        formPayload.append(key, value as string);
+      }
+    });
+
+    try{
+      const stepsImages: File[] = steps.flatMap(step => step.images);
+      stepsImages.forEach(image => {
+        formPayload.append("stepsImages", image);
+      })
+    }catch(err){
+      console.error('Could not process images: ' + err);
+    }
+
+    try {
+      const response = await axios.post("http://localhost:4000/upload-tutorial", formPayload, {
+      headers: { "Content-Type": "multipart/form-data" },
+       });
+
+       if (response.status === 200) {
+         console.log("Tutorial saved:", response.data);
+         navigate("/");
+       }
+     } catch (err) {
+       console.error("Error submitting data:", err);
+     }
+  };
+
   return (
-  <div className="flex flex-col lg:flex-row gap-6 min-h-screen mx-2 w-4/5 px-6 py-8 bg-gray-100 text-black">
-    {/* Formulario principal */}
-    {/* Añadimos flex-grow-0 flex-shrink-1 flex-basis-0 */}
-    <div className=" w-full min-w-0 space-y-4 bg-white p-4 rounded flex-grow-0 flex-shrink-1 flex-basis-0">
-      <h1 className="text-2xl font-bold">Create Tutorial</h1>
+  <form onSubmit={handleSubmit}>  
+    <div className="flex flex-col lg:flex-row gap-6 min-h-screen mx-2 w-4/5 px-6 py-8 bg-gray-100 text-black">
+      {/* Formulario principal */}
+      {/* Añadimos flex-grow-0 flex-shrink-1 flex-basis-0 */}
+      <div className=" w-full min-w-0 space-y-4 bg-white p-4 rounded flex-grow-0 flex-shrink-1 flex-basis-0">
+        <h1 className="text-2xl font-bold">Create Tutorial</h1>
 
-      <input
-        className="w-full p-2 border rounded break-words"
-        placeholder="Tutorial title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
-
-      <textarea
-        className="w-full p-2 border rounded resize-none h-24 break-words break-all"
-        placeholder="Tutorial description"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-      />
-
-      <div className="flex gap-4 flex-wrap">
-        <select
-          className="p-2 border rounded"
-          value={language}
-          onChange={(e) => setLanguage(e.target.value)}
-        >
-          {languages.map((lang) => (
-            <option key={lang}>{lang}</option>
-          ))}
-        </select>
-
-        <select
-          className="p-2 border rounded"
-          value={level}
-          onChange={(e) => setLevel(e.target.value)}
-        >
-          {levels.map((lvl) => (
-            <option key={lvl}>{lvl}</option>
-          ))}
-        </select>
-      </div>
-
-      <input
-        className="w-full p-2 border rounded"
-        placeholder="Tags (comma separated)"
-        value={tags.join(", ")}
-        onChange={(e) => handleTagChange(e.target.value)}
-      />
-
-      <input
-        className="w-full p-2 border rounded"
-        placeholder="Author name"
-        value={author}
-        onChange={(e) => setAuthor(e.target.value)}
-      />
-
-      <div>
-        <label className="block font-semibold">Cover (webp required)</label>
         <input
-          type="file"
-          accept="image/webp"
-          onChange={(e) => setCover(e.target.files?.[0] || null)}
+          className="w-full p-2 border rounded break-words"
+          placeholder="Tutorial title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
         />
-      </div>
 
-      <div className="space-y-6">
-        <h2 className="text-xl font-semibold">Steps</h2>
-        {steps.map((step, index) => (
-          <div
-            key={step.id}
-            className="border p-4 rounded bg-white w-full break-words"
+        <textarea
+          className="w-full p-2 border rounded resize-none h-24 break-words break-all"
+          placeholder="Tutorial description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+
+        <div className="flex gap-4 flex-wrap">
+          <select
+            className="p-2 border rounded"
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
           >
-            <label className="font-semibold">Step {index + 1}</label>
-            <textarea
-              className="w-full p-2 border rounded resize-none h-24 my-2 break-words overflow-x-hidden"
-              placeholder="Step description"
-              value={step.text}
-              onChange={(e) => handleStepChange(step.id, e.target.value)}
-            />
-            <input
-              type="file"
-              multiple
-              accept="image/webp"
-              onChange={(e) => handleImageUpload(step.id, e.target.files)}
-            />
-            <button
-              className="mt-2 text-red-600 text-sm"
-              onClick={() => removeStep(step.id)}
-            >
-              Remove step
-            </button>
-          </div>
-        ))}
+            <option value="" disabled>Select a language</option>
+            {Object.entries(languages).map(([code, name]) => (
+              <option key={code} value={code}>
+                {name}
+              </option>
+            ))}
+          </select>
 
+          <select
+            className="p-2 border rounded"
+            value={level}
+            onChange={(e) => setLevel(e.target.value)}
+          >
+            {levels.map((lvl) => (
+              <option key={lvl}>{lvl}</option>
+            ))}
+          </select>
+        </div>
+
+        <input
+          className="w-full p-2 border rounded"
+          placeholder="Tags (comma separated)"
+          value={tags.join(", ")}
+          onChange={(e) => handleTagChange(e.target.value)}
+        />
+
+        <input
+          className="w-full p-2 border rounded"
+          placeholder="Author name"
+          value={author}
+          onChange={(e) => setAuthor(e.target.value)}
+        />
+
+        <div>
+          <label className="block font-semibold">Cover (webp required)</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setCover(e.target.files?.[0] || null)}
+          />
+        </div>
+
+        <div className="space-y-6">
+          <h2 className="text-xl font-semibold">Steps</h2>
+          {steps.map((step, index) => (
+            <div
+              key={step.id}
+              className="border p-4 rounded bg-white w-full break-words"
+            >
+              <label className="font-semibold">Step {index + 1}</label>
+              <textarea
+                className="w-full p-2 border rounded resize-none h-24 my-2 break-words overflow-x-hidden"
+                placeholder="Step description"
+                value={step.text}
+                onChange={(e) => handleStepChange(step.id, e.target.value)}
+              />
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={(e) => handleImageUpload(step.id, e.target.files)}
+              />
+              <button
+                className="mt-2 text-red-600 text-sm"
+                onClick={() => removeStep(step.id)}
+              >
+                Remove step
+              </button>
+            </div>
+          ))}
+
+          <button
+            className="bg-blue-600 text-white px-4 py-2 rounded"
+            onClick={addStep}
+          >
+            + Add Step
+          </button>
+        </div> 
         <button
-          className="bg-blue-600 text-white px-4 py-2 rounded"
-          onClick={addStep}
+        type="submit"
+        className="p-3 bg-orange-600 rounded text-white font-semibold hover:bg-blue-700 transition w-full"
         >
-          + Add Step
+          Send
         </button>
       </div>
-    </div>
-
-    {/* Panel de Preview */}
-    {/* Mantenemos overflow-auto, añadimos flex-grow-0 flex-shrink-1 flex-basis-0 */}
-    <div className="lg:w-4/6 w-full min-w-0 bg-white p-4 rounded shadow overflow-auto max-h-[80vh] flex-grow-0 flex-shrink-1 flex-basis-0">
-      <h2 className="text-xl font-bold mb-2">Preview</h2>
-      <div className="w-full overflow-x-auto max-w-full">
-        {/* Asegúrate de que estas clases sigan en el pre */}
-        <pre className="w-full min-w-0 whitespace-pre-wrap break-words break-all text-sm">
-          {generateMarkdown()}
-        </pre>
+      
+      {/* Panel de Preview */}
+      {/* Mantenemos overflow-auto, añadimos flex-grow-0 flex-shrink-1 flex-basis-0 */}
+      <div className="lg:w-4/6 w-full min-w-0 bg-white p-4 rounded shadow overflow-auto max-h-[80vh] flex-grow-0 flex-shrink-1 flex-basis-0">
+        <h2 className="text-xl font-bold mb-2">Preview</h2>
+        <div className="w-full overflow-x-auto max-w-full">
+          {/* Asegúrate de que estas clases sigan en el pre */}
+          <pre className="w-full min-w-0 whitespace-pre-wrap break-words break-all text-sm">
+            {generateMarkdown()}
+          </pre>
+        </div>
       </div>
     </div>
-  </div>
+  </form>
 );
   
 };

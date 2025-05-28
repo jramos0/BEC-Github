@@ -67,3 +67,12 @@ export interface ProjectData {
     githubUser: string;
     githubToken: string;
 }
+
+export interface TutorialData {
+    title: string;
+    language: String,
+    markdown: String;
+    cover: File | null;
+    githubUser: string;
+    githubToken: string;
+}

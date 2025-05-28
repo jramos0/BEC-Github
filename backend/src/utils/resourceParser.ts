@@ -1,14 +1,14 @@
 import yaml from "yaml";
 import fs from "node:fs/promises";
 import * as dirManager from "./dirManager.ts";
-import imageManager from "./imageManager.ts";
+import * as imageManager from "./imageManager.ts";
 import * as PRManagement from '../prManagement.ts';
 import * as resourceInterfaces from "./resourceInterfaces.ts";
 import remotePath from "./remotePaths.ts";
 import { format } from "date-fns";
 
 //Identifica el tipo de recurso
-export default function resourceIdentifier(data: any, image: any) {
+export default function resourceIdentifier(data: any, image: any, imageSet?: any[]) {
     const resourceCategory = data.resourceCategory;
     switch (resourceCategory) {
         case "Events":
@@ -22,6 +22,11 @@ export default function resourceIdentifier(data: any, image: any) {
             break;
         case "Project":
             parseProjects(data, image);
+            break;
+        case "Tutorial":
+            if(imageSet) {    
+                parseTutorials(data, image, imageSet);
+            }
             break;
         default:
             console.log("Resource type not valid");
@@ -61,7 +66,7 @@ async function parseEvents(data: resourceInterfaces.EventData, image: any): Prom
         await fs.writeFile(`${parentPath}/event.yml`, yamlData, 'utf8');
         console.log(`Archivo YAML creado exitosamente en: ${parentPath}/event.yml`);
 
-        await imageManager(image, childPath, "thumbnail");
+        await imageManager.singleImage(image, childPath, "thumbnail");
 
         const remote = await remotePath(data);
         console.log("Remote Path for the processed resource category: " + remote);
@@ -72,6 +77,7 @@ async function parseEvents(data: resourceInterfaces.EventData, image: any): Prom
     
         await PRManagement.createPR(branchData, commitData);
 
+        await dirManager.deleteFolder(parentPath);
     } catch (error) {
         console.error("Error processing data: ", error);
     }
@@ -105,7 +111,7 @@ async function parseNewsletter(data: resourceInterfaces.NewsletterData, image: a
         await fs.writeFile(`${parentPath}/newsletter.yml`, yamlData, 'utf8');
         console.log(`Archivo YAML creado exitosamente en: ${parentPath}/newsletter.yml`);
 
-        imageManager(image, childPath, "thumbnail");
+        await imageManager.singleImage(image, childPath, "thumbnail");
 
         const remote = await remotePath(data);
         console.log("Remote Path for the processed resource category: " + remote);
@@ -115,6 +121,8 @@ async function parseNewsletter(data: resourceInterfaces.NewsletterData, image: a
         const commitData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.title};
     
         await PRManagement.createPR(branchData, commitData);
+
+        await dirManager.deleteFolder(parentPath);
     }catch(error){
         console.error("Error processing data: ", error);
     }
@@ -152,7 +160,7 @@ async function parseProfessor(data: resourceInterfaces.ProfessorData, image: any
         console.log(`Archivo YAML creado exitosamente en: ${parentPath}/professor.yml`);
         console.log(`Archivo YAML creado exitosamente en: ${parentPath}/en.yml`);
 
-        imageManager(image, childPath, "profile");
+        await imageManager.singleImage(image, childPath, "profile");
 
         const remote = await remotePath(data);
         console.log("Remote Path for the processed resource category: " + remote);
@@ -162,6 +170,8 @@ async function parseProfessor(data: resourceInterfaces.ProfessorData, image: any
         const commitData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.name};
     
         await PRManagement.createPR(branchData, commitData);
+        
+        await dirManager.deleteFolder(parentPath);
     }catch(error){
         console.error("Error processing data: ", error);
     }
@@ -193,7 +203,7 @@ async function parseProjects(data: resourceInterfaces.ProjectData, image: any): 
         console.log(`Archivo YAML creado exitosamente en: ${parentPath}/project.yml`);
         console.log(`Archivo YAML creado exitosamente en: ${parentPath}/${data.original_language}.yml`);
     
-        imageManager(image, childPath, "logo");
+        await imageManager.singleImage(image, childPath, "logo");
 
         const remote = await remotePath(data);
         console.log("Remote Path for the processed resource category: " + remote);
@@ -203,8 +213,44 @@ async function parseProjects(data: resourceInterfaces.ProjectData, image: any): 
         const commitData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.name};
 
         await PRManagement.createPR(branchData, commitData);
+
+        await dirManager.deleteFolder(parentPath);
     } catch(error){
-        console.error(error);
-        console.log(data);
+        console.error("Error processing data: ", error);
+    }
+}
+
+//Parsing para la categoría Tutorial
+async function parseTutorials(data: resourceInterfaces.TutorialData, image: any, imageSet: any[]): Promise<void> {
+    try{
+        const parentPath = await dirManager.createFolder(data.title);
+        const childPath = await dirManager.createChildFolder(parentPath);
+        const subChildPath = childPath + `/${data.language}`;
+        try {
+            await fs.mkdir(subChildPath, { recursive: true });
+            console.log(`Carpeta creada: ${subChildPath}`);
+        } catch (error) {
+            console.error("Error al crear la carpeta: ", error);
+            return ;
+        }
+
+        await fs.writeFile(`${parentPath}/${data.language}.md`, data.markdown, 'utf8');
+        console.log(`Archivo MD creado exitosamente en: ${parentPath}/${data.language}.md`);
+
+        await imageManager.singleImage(image, childPath, "cover");
+        await imageManager.imageSet(imageSet, subChildPath);
+
+        const remote = await remotePath(data);
+        console.log("Remote Path for the processed resource category: " + remote);
+
+        const branchName = await PRManagement.branchNameCreator(data.githubUser, data.title);
+        const branchData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName};
+        const commitData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.title};
+
+        await PRManagement.createPR(branchData, commitData);
+
+        await dirManager.deleteFolder(parentPath);
+    } catch(error) {
+        console.error("Error processing data: ", error);
     }
 }

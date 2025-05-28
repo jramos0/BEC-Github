@@ -24,18 +24,32 @@ app.use(express.json());
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-app.post("/", upload.single("thumbnail"), async (req, res) => {
-  try {
-    console.log("📨 Data received:", req.body);
-    await resourceParser(req.body, req.file);
-    res.sendStatus(200);
-  } catch (error) {
-    console.error("❌ Error receiving data:", error);
-    res.sendStatus(500);
+app.post("/", upload.single("thumbnail"), async (req, res)=>{
+  try{
+  console.log("📨 Data received: ", req.body);
+  await resourceParser(req.body, req.file);;
+  res.status(200).send();
+  } catch(error){
+    console.error("Error receiving data: ", error);
+    res.status(500).send(res.json);
   }
 });
 
-app.get("/", (_req, res) => {
+app.post("/upload-tutorial", upload.fields([{name: 'thumbnail'}, {name: 'stepsImages'}]), async (req, res)=>{
+  try{
+    console.log("Data received: ", req.body);    
+    const files = req.files as { [key: string]: Express.Multer.File[] };
+    const thumbnail = files?.["thumbnail"]?.[0];
+    const stepsImages = files?.["stepsImages"] || []
+    const prResponse = await resourceParser(req.body, thumbnail, stepsImages);
+    res.status(200).send();
+  } catch(error){
+    console.error("Error receiving data: ", error);
+    res.status(500).send(res.json);
+  }
+});
+
+app.get("/", (__req, res) => {
   res.send("Backend funcionando 🚀");
 });
 

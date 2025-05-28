@@ -165,6 +165,7 @@ const Home = () => {
               { label: 'Newsletter', path: '/newsletter' },
               { label: 'Professor', path: '/professor' },
               { label: 'Project', path: '/projects' },
+              { label: 'Tutorial', path: '/tutorials'},
             ].map(({ label, path }) => (
               <button
                 key={label}
