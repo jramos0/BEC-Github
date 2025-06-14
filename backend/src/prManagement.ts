@@ -15,7 +15,7 @@ export async function createPR(branchData: any, commitData: any): Promise<any> {
         // Filtrar PRs del usuario autenticado
         const userPRs: any[] = await prsData.filter((pr: any) => pr.user.login === branchData.OWNER && pr.state == "open");
         
-        if(userPRs.length < 3) {
+        if(userPRs.length < 15) {
             try{        
                 await axios.post('http://localhost:4000/create-branch', branchData, {
                     headers: {
@@ -41,7 +41,7 @@ export async function createPR(branchData: any, commitData: any): Promise<any> {
                 const fullHead = `${commitData.OWNER}:${commitData.branchName}`
         
                 const payload = {
-                    title: `[${category}]Adding ${commitData.resourceName}`, 
+                    title: `[${category}]${commitData.addOrMod} ${commitData.resourceName}`, 
                     head: fullHead, 
                     base: 'dev', 
                     body: `This pull request adds resource ${commitData.resourceName}`,

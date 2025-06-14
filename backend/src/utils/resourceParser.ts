@@ -73,7 +73,7 @@ async function parseEvents(data: resourceInterfaces.EventData, image: any): Prom
 
         const branchName = await PRManagement.branchNameCreator(data.githubUser, data.name);
         const branchData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName};
-        const commitData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.name, category: data.resourceCategory};
+        const commitData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.name, category: data.resourceCategory, addOrMod: "Adding"};
     
         await PRManagement.createPR(branchData, commitData);
 
@@ -100,7 +100,7 @@ async function parseNewsletter(data: resourceInterfaces.NewsletterData, image: a
             },
             language: data.language,
             description: description,
-            contributor_name: data.githubUser,
+            contributor_names: data.githubUser,
             tags: data.tags,
         }
 
@@ -118,7 +118,7 @@ async function parseNewsletter(data: resourceInterfaces.NewsletterData, image: a
 
         const branchName = await PRManagement.branchNameCreator(data.githubUser, data.title);
         const branchData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName};
-        const commitData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.title, category: data.resourceCategory};
+        const commitData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.title, category: data.resourceCategory, addOrMod: "Adding"};
     
         await PRManagement.createPR(branchData, commitData);
 
@@ -167,7 +167,7 @@ async function parseProfessor(data: resourceInterfaces.ProfessorData, image: any
 
         const branchName = await PRManagement.branchNameCreator(data.githubUser, data.name);
         const branchData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName};
-        const commitData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.name, category: data.resourceCategory};
+        const commitData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.name, category: data.resourceCategory, addOrMod: "Adding"};
     
         await PRManagement.createPR(branchData, commitData);
         
@@ -210,7 +210,7 @@ async function parseProjects(data: resourceInterfaces.ProjectData, image: any): 
 
         const branchName = await PRManagement.branchNameCreator(data.githubUser, data.name);
         const branchData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName};
-        const commitData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.name, category: data.resourceCategory};
+        const commitData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.name, category: data.resourceCategory, addOrMod: "Adding"};
 
         await PRManagement.createPR(branchData, commitData);
 
@@ -245,7 +245,7 @@ async function parseTutorials(data: resourceInterfaces.TutorialData, image: any,
 
         const branchName = await PRManagement.branchNameCreator(data.githubUser, data.title);
         const branchData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName};
-        const commitData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.title, category: data.resourceCategory};
+        const commitData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.title, category: data.resourceCategory, addOrMod: "Adding"};
 
         await PRManagement.createPR(branchData, commitData);
 

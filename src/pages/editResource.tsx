@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import yaml from "js-yaml";
+import axios from "axios";
 
 const EditResource = () => {
+  const [resourceCategory, setResourceCategory] = useState("");
   const [url, setUrl] = useState("");
   const [fileContent, setFileContent] = useState("");
   const [filePath, setFilePath] = useState("");
@@ -12,6 +14,14 @@ const EditResource = () => {
   const isValidDateString = (str: string) => {
     const d = new Date(str);
     return !isNaN(d.getTime());
+  };
+
+  const getResourceCategory = (path: string) => {
+    if(path.includes("newsletters")) return "Newsletter";
+    if(path.includes("projects")) return "Project";
+    if(path.includes("events")) return "Events";
+    if(path.includes("professors")) return "Professor";
+    return "undefined";
   };
 
   const formatDateForInput = (str: string) => {
@@ -38,7 +48,7 @@ const EditResource = () => {
 
   const handleFetch = async () => {
     const accessToken = localStorage.getItem("accessToken");
-    const username = localStorage.getItem("UserId");
+    const username = localStorage.getItem("username");
 
     if (!accessToken || !username) {
       setError("Token o username no disponible.");
@@ -62,6 +72,7 @@ const EditResource = () => {
       if (response.ok) {
         setFileContent(data.content);
         setFilePath(data.path);
+        setResourceCategory(getResourceCategory(data.path));
 
         try {
           const parsed = yaml.load(data.content) as Record<string, any>;
@@ -211,7 +222,40 @@ const EditResource = () => {
     return null;
   };
 
+  const handleSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const githubUser = localStorage.getItem("username");
+    const githubToken = localStorage.getItem("accessToken");
+
+    try{
+      const finalData = {
+        resourceCategory,
+        ...parsedData,
+        githubUser: githubUser,
+        githubToken: githubToken,
+      }
+      console.log("Final data prepared for sending:", finalData);
+
+      try {
+        await axios.post("http://localhost:4000/edit-resource", JSON.stringify(finalData), {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      handleClearResource();
+      } catch (error) {
+      console.error("Error sending data: ", error);
+      }
+    }
+    catch (error) {
+      console.error("Error processing data to send: ", error);
+    }
+  }
+
   const handleClearResource = () => {
+    setResourceCategory("");
     setUrl("");
     setFileContent("");
     setFilePath("");
@@ -250,6 +294,16 @@ const EditResource = () => {
           {Object.entries(parsedData).map(([key, value]) => renderField(key, value))}
         </div>
       )}
+      {Object.keys(parsedData).length > 0 && (
+        <div className="p-6 max-w-4xl mx-auto text-black">
+          <button
+            onClick={handleSend}
+            className="mt-2 bg-orange-500 text-white px-6 py-2 rounded hover:bg-orange-600 transition"
+          >
+            Send Changes
+          </button>
+        </div>)
+      }
     </div>
   );
 };
