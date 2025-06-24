@@ -85,5 +85,6 @@ PORT=4000
 🔹 **Automatización de Pull Requests.**  
 
 👨‍💻 **¡Contribuciones bienvenidas!** 🚀
-
+### NOTA:
+* **🛅🛅🛅Para ejecutar el servidor se requiere una llave de AES-256 que la podes generar con el comando openssl rand -hex 32 y luego guardar ese valor generado en ENCRYPTION_KEY en el archivo .env del Backend**
 ---

@@ -62,7 +62,7 @@ const EditResource = () => {
         )}&username=${username}`,
         {
           headers: {
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `token ${accessToken}`,
           },
         }
       );
