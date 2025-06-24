@@ -9,11 +9,12 @@ import githubManage from './githubManage.ts';
 import branchManagement from './branchManagement.ts';
 import { fetchFileFromUserFork } from './githubUtils.ts';
 import { extractPathFromUrl } from './utils/pathUtils.ts';
-
+import * as crypto from 'crypto';
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY as string;
 
 app.use(cors({
   origin: "http://localhost:5173",
@@ -21,6 +22,16 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+function decryptToken(text: string): string {
+  const parts = text.split(':');
+  const iv = Buffer.from(parts.shift() as string, 'hex');
+  const encryptedText = Buffer.from(parts.join(':'), 'hex');
+  const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY, 'hex'), iv);
+  let decrypted = decipher.update(encryptedText);
+  decrypted = Buffer.concat([decrypted, decipher.final()]);
+  return decrypted.toString();
+}
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -72,9 +83,25 @@ app.use("/", branchManagement);
 // GET: Load existing resource YAML
 app.get("/api/load-file", async (req, res): Promise<void> => {
   const { url, username } = req.query;
-  const token = req.get("Authorization")?.replace("Bearer ", "");
+ const authHeader = req.get("Authorization") as string;
+  // En este ejemplo esperamos el formato "Bearer <token>"
+  const parts = authHeader.split(' ');
+  if (parts.length !== 2 || parts[0] !== 'token') {
+    res.status(400).json({ error: "Invalid Authorization header format" });
+    return;
+  }
 
-  if (!token || typeof url !== "string" || typeof username !== "string") {
+  const encryptedToken = parts[1];
+
+  let decryptedToken: string;
+  try {
+    decryptedToken = decryptToken(encryptedToken);
+  } catch (error) {
+    console.error("❌ Error al desencriptar el access_token:", error);
+    res.status(400).json({ error: "Invalid token" });
+    return;
+  }
+  if (!authHeader || typeof url !== "string" || typeof username !== "string") {
     res.status(400).json({ error: "Missing parameters or invalid token" });
     return;
   }
@@ -83,7 +110,7 @@ app.get("/api/load-file", async (req, res): Promise<void> => {
     const path = extractPathFromUrl(url);
     console.log("📄 Final path resolved:", path);
 
-    const content = await fetchFileFromUserFork(path, token, username);
+    const content = await fetchFileFromUserFork(path, decryptedToken, username);
     res.json({ content, path });
 
   } catch (err: any) {

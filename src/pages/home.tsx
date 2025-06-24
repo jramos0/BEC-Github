@@ -69,7 +69,7 @@ const Home = () => {
         const forkReq = await fetch('http://localhost:4000/manage/forks', {
           method: "GET",
           headers: {
-            Authorization: "Bearer " + accessToken,
+            Authorization: "token " + accessToken,
           },
         });
   
