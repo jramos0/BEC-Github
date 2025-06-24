@@ -128,9 +128,21 @@ const EventForm = () => {
         <div className="w-1/3 flex items-end">
           <label title="Upload only horizontal images" className="cursor-pointer bg-gray-800 hover:bg-orange-700 text-white text-sm px-5 py-3 rounded-md transition shadow-md w-full text-center">
             Upload Thumbnail
-            <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) formData.thumbnail = file; }} />
+            <input type="file" accept="image/*" className="hidden" onChange={(e) => { 
+              const file = e.target.files?.[0]; 
+              if (file) setFormData(prev => ({ ...prev, thumbnail: file })); 
+            }} />
           </label>
         </div>
+      </div>
+      {formData.thumbnail && (
+        <div className="text-green-500 text-xs text-right px-8">
+          Selected image: '{formData.thumbnail.name}'
+        </div>
+      )}
+
+      <div className="text-xs text-gray-400 text-center">
+        When choosing a date/time, please ensure it is in the local time of the event location. The system will convert it to the required format automatically.
       </div>
 
       <div className="flex gap-4">

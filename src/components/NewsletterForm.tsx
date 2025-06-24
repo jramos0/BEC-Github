@@ -18,20 +18,19 @@ const NewsletterForm = () => {
     website: "",
     language: "",
     description: "",
-    contributor_names: [""],
     tags: ["", ""],
     thumbnail: null as File | null,
     githubUser: "",
     githubToken: "",
   });
 
-  const levels = ["beginner", "intermediate", "expert"];
+  const levels = ["beginner", "intermediate", "advanced", "expert"];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleArrayChange = (field: "tags" | "contributor_names", index: number, value: string) => {
+  const handleArrayChange = (field: "tags", index: number, value: string) => {
     const newArray = [...formData[field]];
     newArray[index] = value;
     setFormData({ ...formData, [field]: newArray });
@@ -149,42 +148,29 @@ const NewsletterForm = () => {
         onChange={handleChange}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="flex flex-col gap-2">
-          <label className="text-sm text-gray-400">Contributor(s)</label>
-          {formData.contributor_names.map((contributor, index) => (
-            <input
-              key={index}
-              type="text"
-              placeholder={`Contributor ${index + 1}`}
-              className="p-3 rounded bg-gray-800 text-white"
-              value={contributor}
-              onChange={(e) => handleArrayChange("contributor_names", index, e.target.value)}
-            />
-          ))}
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <label className="text-sm text-gray-400">Tags</label>
+      <div className="flex flex-col gap-2">
+        <label className="text-sm text-gray-400">Tags</label>
+        <div className="flex flex-row gap-4 w-full">
           {formData.tags.map((tag, index) => (
-           <select
+            <select
               key={index}
-              className="p-3 rounded bg-gray-800 text-white"
+              className="p-3 rounded bg-gray-800 text-white flex-1"
               value={tag}
               onChange={(e) => handleArrayChange("tags", index, e.target.value)}
             >
-              <option value= "">Select a tag</option>
+              <option value="">Select a tag</option>
               {supportedTags.map((tag) => (
                 <option key={tag} value={tag}>
                   {tag}
-                </option> 
+                </option>
               ))}
             </select>
           ))}
         </div>
       </div>
 
-      <label className="cursor-pointer bg-gray-800 hover:bg-orange-700 text-white text-sm px-5 py-3 rounded-md transition shadow-md w-full text-center">
+      <div className="flex flex-row items-center gap-4">
+        <label className="cursor-pointer bg-gray-800 hover:bg-orange-700 text-white text-sm px-5 py-3 rounded-md transition shadow-md w-full text-center">
         Upload Thumbnail
         <input
           type="file"
@@ -195,9 +181,14 @@ const NewsletterForm = () => {
             if (file) {
               setFormData((prev) => ({ ...prev, thumbnail: file }));
             }
-          }}
-        />
-      </label>
+          }}/>
+        </label>
+        {formData.thumbnail && (
+          <div className="text-green-500 text-xs text-center">
+            Selected image: '{formData.thumbnail.name}'
+          </div>
+        )}
+      </div>
 
       <button
         type="submit"

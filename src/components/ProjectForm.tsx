@@ -105,51 +105,7 @@ const ProjectForm = () => {
 
   return (
     <form className="w-full max-w-6xl mx-auto flex flex-col gap-4 px-4" onSubmit={handleSubmit}>
-      <input
-        type="text"
-        name="name"
-        placeholder="Project Name"
-        className="p-3 rounded bg-gray-800 text-white"
-        value={formData.name}
-        onChange={handleChange}
-      />
-
-      <textarea
-        name="description"
-        placeholder="Description"
-        className="p-3 rounded bg-gray-800 text-white"
-        rows={4}
-        value={formData.description}
-        onChange={handleChange}
-      />
-
-      <label className="cursor-pointer bg-gray-800 hover:bg-orange-700 text-white text-sm px-5 py-3 rounded-md transition shadow-md w-full text-center">
-        Upload Thumbnail
-        <input
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) setFormData((prev) => ({ ...prev, thumbnail: file }));
-          }}
-        />
-      </label>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {(["website", "twitter", "github", "nostr"] as const).map((field) => (
-          <input
-            key={field}
-            type="text"
-            placeholder={`${field.charAt(0).toUpperCase() + field.slice(1)} URL`}
-            className="p-3 rounded bg-gray-800 text-white"
-            value={formData.links[field]}
-            onChange={(e) => handleLinkChange(field, e.target.value)}
-          />
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <select
           name="category"
           className="p-3 rounded bg-gray-800 text-white"
@@ -174,6 +130,57 @@ const ProjectForm = () => {
             </option>
           ))}
         </select>
+      </div>
+
+      <input
+        type="text"
+        name="name"
+        placeholder="Project Name"
+        className="p-3 rounded bg-gray-800 text-white"
+        value={formData.name}
+        onChange={handleChange}
+      />
+
+      <textarea
+        name="description"
+        placeholder="Description"
+        className="p-3 rounded bg-gray-800 text-white"
+        rows={4}
+        value={formData.description}
+        onChange={handleChange}
+      />
+
+      <div className="flex flex-row items-center gap-4">
+        <label className="cursor-pointer bg-gray-800 hover:bg-orange-700 text-white text-sm px-5 py-3 rounded-md transition shadow-md w-full text-center">
+        Upload Thumbnail
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) setFormData((prev) => ({ ...prev, thumbnail: file }));
+          }}
+        />
+      </label>
+      {formData.thumbnail && (
+        <div className="text-green-500 text-xs text-center">
+            Selected image: '{formData.thumbnail.name}'
+        </div>
+      )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {(["website", "twitter", "github", "nostr"] as const).map((field) => (
+          <input
+            key={field}
+            type="text"
+            placeholder={`${field.charAt(0).toUpperCase() + field.slice(1)} URL`}
+            className="p-3 rounded bg-gray-800 text-white"
+            value={formData.links[field]}
+            onChange={(e) => handleLinkChange(field, e.target.value)}
+          />
+        ))}
       </div>
 
       <div className="flex flex-col gap-2">

@@ -2,6 +2,7 @@ import axios from 'axios';
 
 //Manages branch creation, data commit and PR
 export async function createPR(branchData: any, commitData: any): Promise<any> {
+    const category = commitData.category.toUpperCase();
     const UPSTREAM_OWNER = 'jramos0';
     const UPSTREAM_REPO = 'bitcoin-educational-content';
 
@@ -14,7 +15,7 @@ export async function createPR(branchData: any, commitData: any): Promise<any> {
         // Filtrar PRs del usuario autenticado
         const userPRs: any[] = await prsData.filter((pr: any) => pr.user.login === branchData.OWNER && pr.state == "open");
         
-        if(userPRs.length < 3) {
+        if(userPRs.length < 15) {
             try{        
                 await axios.post('http://localhost:4000/create-branch', branchData, {
                     headers: {
@@ -40,7 +41,7 @@ export async function createPR(branchData: any, commitData: any): Promise<any> {
                 const fullHead = `${commitData.OWNER}:${commitData.branchName}`
         
                 const payload = {
-                    title: `Adding ${commitData.resourceName}`, 
+                    title: `[${category}]${commitData.addOrMod} ${commitData.resourceName}`, 
                     head: fullHead, 
                     base: 'dev', 
                     body: `This pull request adds resource ${commitData.resourceName}`,
@@ -63,7 +64,7 @@ export async function createPR(branchData: any, commitData: any): Promise<any> {
                 console.error('❌ Error creating PR: ' + error);
             }
         }
-        else if(userPRs.length >= 3) {
+        else if(userPRs.length >= 15) {
             console.error('User has reached the limit of 3 pull requests open at a time.');
         }
     }catch(error){

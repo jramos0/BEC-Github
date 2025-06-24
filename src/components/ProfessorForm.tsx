@@ -11,7 +11,6 @@ const ProfessorForm = () => {
     resourceCategory: "Professor";
     id: string;
     name: string;
-    contributor_id: string;
     twitter?: string;
     github?: string;
     website?: string;
@@ -30,7 +29,6 @@ const ProfessorForm = () => {
     resourceCategory: "Professor",
     id: uuidv4(),
     name: "",
-    contributor_id: "",
     twitter: "",
     github: "",
     website: "",
@@ -128,8 +126,7 @@ const ProfessorForm = () => {
   return (
     <form className="w-full max-w-6xl mx-auto flex flex-col gap-4 px-4" onSubmit={handleSubmit}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <input type="text" name="name" placeholder="Professor Name" className="p-3 rounded bg-gray-800 text-white w-full" value={formData.name} onChange={handleChange} />
-        <input type="text" name="contributor_id" placeholder="Contributor ID" className="p-3 rounded bg-gray-800 text-white w-full" value={formData.contributor_id} onChange={handleChange} />
+        <input type="text" name="name" placeholder="Professor Name" className="p-3 rounded bg-gray-800 text-white w-full col-span-1 md:col-span-2" value={formData.name} onChange={handleChange} />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -232,16 +229,21 @@ const ProfessorForm = () => {
           ))}
         </div>
 
-        <label className="cursor-pointer bg-gray-800 hover:bg-orange-700 text-white text-sm px-5 py-3 rounded-md transition shadow-md w-full text-center">
-        Upload Thumbnail
-        <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) setFormData((prev) => ({ ...prev, thumbnail: file }));
-        }} />
-      </label>
+        <div className="flex flex-row items-center w-full gap-4">
+          <label className="cursor-pointer bg-gray-800 hover:bg-orange-700 text-white text-sm rounded-md transition shadow-md w-full text-center mb-1 py-3">
+            Upload Thumbnail
+            <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) setFormData((prev) => ({ ...prev, thumbnail: file }));
+            }}/>
+          </label>
+          {formData.thumbnail && (
+            <div className="text-green-500 text-xs text-center">
+              Selected image: '{formData.thumbnail.name}'
+            </div>
+          )}
+        </div>
       </div>
-
-      
 
       <button type="submit" className="p-3 bg-orange-600 rounded text-white font-semibold hover:bg-blue-700 transition w-full">
         Send

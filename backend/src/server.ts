@@ -3,6 +3,7 @@ import multer from "multer";
 import cors from "cors";
 import dotenv from "dotenv";
 import resourceParser from "./utils/resourceParser.ts";
+import editedResourceParser from "./utils/editedResourceParser.ts";
 import githubAuth from './githubAuth.ts';
 import githubManage from './githubManage.ts';
 import branchManagement from './branchManagement.ts';
@@ -44,6 +45,17 @@ app.post("/upload-tutorial", upload.fields([{name: 'thumbnail'}, {name: 'stepsIm
     const prResponse = await resourceParser(req.body, thumbnail, stepsImages);
     res.status(200).send();
   } catch(error){
+    console.error("Error receiving data: ", error);
+    res.status(500).send(res.json);
+  }
+});
+
+app.post("/edit-resource", async (req, res) => {
+  try{  
+    console.log("📨 Data received for edit: ", req.body);
+    editedResourceParser(req.body);
+    res.status(200).send();
+  }catch(error){
     console.error("Error receiving data: ", error);
     res.status(500).send(res.json);
   }
