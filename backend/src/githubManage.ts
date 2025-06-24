@@ -191,10 +191,7 @@ router.get('/branches', async (req: Request, res: Response): Promise<void> => {
     res.status(400).json({ error: "No Authorization header provided" });
     return
   }
-  if (!authHeader.startsWith("Bearer ")) {
-     res.status(400).json({ error: "Invalid Authorization header format" });
-     return
-  }
+  
   const encryptedToken = authHeader.split(" ")[1];
 
   // 2. Desencriptar
@@ -210,7 +207,7 @@ router.get('/branches', async (req: Request, res: Response): Promise<void> => {
   // 3. Llamada a GitHub
   try {
     const userResp = await fetch("https://api.github.com/user", {
-      headers: { Authorization: `token ${decryptedToken}` }
+      headers: { 'Authorization': `token ${decryptedToken}` }
     });
     if (!userResp.ok) {
       throw new Error(`GitHub API returned ${userResp.status}`);
@@ -221,7 +218,7 @@ router.get('/branches', async (req: Request, res: Response): Promise<void> => {
       `https://api.github.com/repos/${userLogin}/${REPO}/branches`,
       {
         headers: {
-          Authorization: `token ${decryptedToken}`,
+          'Authorization': `token ${decryptedToken}`,
           'Content-Type': 'application/vnd.github.v3+json'
         }
       }
@@ -280,7 +277,7 @@ router.post('/deletebranch', async (req: Request, res: Response): Promise<void> 
 
   try {
     // 1. Obtener información del usuario autenticado
-    const userResp = await fetch("https://api.github.com/user", { headers: { Authorization: `token ${decryptedToken}` } });
+    const userResp = await fetch("https://api.github.com/user", { headers: { 'Authorization': `token ${decryptedToken}` } });
     if (!userResp.ok) {
       throw new Error(`Error al obtener el usuario: ${userResp.status}`);
     }
@@ -291,7 +288,7 @@ router.post('/deletebranch', async (req: Request, res: Response): Promise<void> 
     const prUrl = `https://api.github.com/repos/${UPSTREAM_OWNER}/${REPO}/pulls?state=closed&head=${userLogin}:${branchName}`;
     const prResp = await fetch(prUrl, {
       headers: {
-        Authorization: `token ${decryptedToken}`,
+        'Authorization': `token ${decryptedToken}`,
         'Content-Type': 'application/vnd.github.v3+json'
       }
     });
@@ -323,7 +320,7 @@ router.post('/deletebranch', async (req: Request, res: Response): Promise<void> 
     const deleteUrl = `https://api.github.com/repos/${userLogin}/${REPO}/git/refs/heads/${branchName}`;
     const deleteResp = await fetch(deleteUrl, {
       method: "DELETE",
-      headers: { Authorization: `token ${decryptedToken}` }
+      headers: { 'Authorization': `token ${decryptedToken}` }
     });
 
     if (deleteResp.ok) {
@@ -375,7 +372,7 @@ router.post('/updatepr', async (req: Request, res: Response): Promise<void> => {
   try {
     // 1. Obtener información del usuario autenticado
     const userResp = await fetch("https://api.github.com/user", {
-      headers: { Authorization: `token ${decryptedToken}` }
+      headers: { 'Authorization': `token ${decryptedToken}` }
     });
 
     if (!userResp.ok) {
@@ -416,7 +413,7 @@ router.post('/updatepr', async (req: Request, res: Response): Promise<void> => {
     const graphqlResp = await fetch('https://api.github.com/graphql', {
       method: "POST",
       headers: {
-        Authorization: `token ${decryptedToken}`,
+        'Authorization': `token ${decryptedToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ query, variables })
@@ -472,7 +469,7 @@ router.post('/updatepr', async (req: Request, res: Response): Promise<void> => {
     const mutationResp = await fetch('https://api.github.com/graphql', {
       method: "POST",
       headers: {
-        Authorization: `token ${decryptedToken}`,
+        'Authorization': `token ${decryptedToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -530,7 +527,7 @@ router.post('/user-prs', async (req: Request, res: Response):Promise<void> => {
   try {
     const ghRes = await fetch(
       `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/pulls?state=all`,
-      { headers: { Authorization: `Bearer ${token}` } }
+      { headers: { 'Authorization': `Bearer ${token}` } }
     );
     if (!ghRes.ok) {
       const err = await ghRes.json();

@@ -41,7 +41,7 @@ function DashboardView() {
         const response = await fetch('http://localhost:4000/manage/user-prs', {
           method: 'POST',
           headers: {
-            'Authorization': `token ${TOKEN}`,
+            'Authorization': `Bearer ${TOKEN}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ USERNAME, REPO_OWNER, REPO_NAME }),
@@ -68,7 +68,7 @@ function DashboardView() {
         try {
           const response = await fetch("http://localhost:4000/manage/branches", {
             method: 'GET',
-            headers: { Authorization: `token ${TOKEN}` },
+            headers: { 'Authorization': `token ${TOKEN}` },
           });
           if (!response.ok) {
             throw new Error(`Error al obtener ramas: ${response.status}`);
