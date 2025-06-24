@@ -30,23 +30,38 @@ function DashboardView() {
   const USERNAME = localStorage.getItem('username');
 
   useEffect(() => {
-    const fetchPRs = async () => {
-    try{
-        // Obtener PRs del repositorio
-        const prsResponse = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/pulls?state=all`, {
-            headers: { Authorization: `token ${TOKEN}` },
-        });
-        const prsData = await prsResponse.json();
+    const fetchUserPRs = async () => {
+      if (!TOKEN || !USERNAME) {
+        setError('No se encontró token o usuario.');
+        setLoading(false);
+        return;
+      }
 
-        // Filtrar PRs del usuario autenticado
-        const userPRs = prsData.filter((pr: any) => pr.user.login === USERNAME);
-        setPullRequests(userPRs);
-    }catch(error){
-      console.error({error: "Error fetching user's PRs"})
-    }
-  }
-    fetchPRs();
-}, []);
+      try {
+        const response = await fetch('http://localhost:4000/manage/user-prs', {
+          method: 'POST',
+          headers: {
+            'Authorization': `token ${TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ USERNAME, REPO_OWNER, REPO_NAME }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || `Error ${response.status}`);
+        }
+
+        setPullRequests(data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserPRs();
+  }, [TOKEN, USERNAME]);
 
   useEffect(() => {
       const getBranches = async () => {
