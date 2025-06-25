@@ -40,53 +40,62 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    async function getUserData() {
-      if (!accessToken) return;
-      const response = await fetch('http://localhost:4000/getUserData', {
-        method: 'GET',
-        headers: {
-          Authorization: 'Bearer ' + accessToken,
-        },
-      });
+  async function getUserData() {
+    if (!accessToken) return;
 
-      const data = await response.json();
-      setUserData(data);
-      const lastExecution = localStorage.getItem("lastForkExecution");
-      const oneHour = 60 * 60 * 1000;
-  
-      // Si la última ejecución fue hace menos de una hora, no ejecutar de nuevo
-      if (lastExecution && Date.now() - parseInt(lastExecution) < oneHour) {
-        console.log("⏳ Esperando 1 hora antes de volver a ejecutar fork sync...");
-        return;
-      }
-  
+    const storedUsername = localStorage.getItem("username");
+    if (storedUsername) {
+      console.log("✅ Username already stored:", storedUsername);
+      return;
+    }
+
+    const response = await fetch('http://localhost:4000/getUserData', {
+      method: 'GET',
+      headers: {
+        Authorization: 'Bearer ' + accessToken,
+      },
+    });
+
+    const data = await response.json();
+    setUserData(data);
+
+    const oneHour = 60 * 60 * 1000;
+    const lastExecution = localStorage.getItem("lastForkExecution");
+
+    // Si la última ejecución fue hace menos de una hora, no ejecutar de nuevo
+    if (lastExecution && Date.now() - parseInt(lastExecution) < oneHour) {
+      console.log("⏳ Esperando 1 hora antes de volver a ejecutar fork sync...");
+    } else {
       setLoading(true);
-  
       try {
-        
-        localStorage.setItem("username", data.login);
-  
         const forkReq = await fetch('http://localhost:4000/manage/forks', {
           method: "GET",
           headers: {
             Authorization: "token " + accessToken,
           },
         });
-  
+
         const forkRes = await forkReq.json();
-        console.log(forkRes)
-  
+        console.log(forkRes);
+
         // Guardar la hora actual como última ejecución
         localStorage.setItem("lastForkExecution", Date.now().toString());
       } catch (error) {
-        console.error("❌ Error fetching user data or fork:", error);
+        console.error("❌ Error fetching fork:", error);
       } finally {
         setLoading(false);
       }
     }
-  
-    getUserData();
-  }, [accessToken]);
+
+    // Guardar el username solo si no existe aún
+    if (!localStorage.getItem("username")) {
+      localStorage.setItem("username", data.login);
+      console.log("📝 Username saved to localStorage:", data.login);
+    }
+  }
+
+  getUserData();
+}, [accessToken]);
   
 
   // useEffect(() => {
