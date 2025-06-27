@@ -101,7 +101,7 @@ function DashboardView() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `bearer ${TOKEN}`,
+            Authorization: `token ${TOKEN}`,
           },
           body: JSON.stringify({ branchName: selectedBranch }),
         });
@@ -129,7 +129,7 @@ function DashboardView() {
           method: "POST",
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${TOKEN}`,
+            Authorization: `token ${TOKEN}`,
           },
           body: JSON.stringify({ branchName }),
         });
