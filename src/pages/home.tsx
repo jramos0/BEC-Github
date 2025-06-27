@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
-import { GitHubUser } from '../types/github';
 import pbnLogo from '../assets/pbn_logo.png';
 import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/atoms/LoadingSpinner';
 
 const Home = () => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [userData, setUserData] = useState<GitHubUser | null>(null);
-  
+  const [username, setUsername] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -39,33 +37,38 @@ const Home = () => {
     }
   }, []);
 
+  // Leer username desde localStorage cuando se monta
   useEffect(() => {
-  async function getUserData() {
-    if (!accessToken) return;
-
-    const storedUsername = localStorage.getItem("username");
+    const storedUsername = localStorage.getItem('username');
     if (storedUsername) {
-      console.log("✅ Username already stored:", storedUsername);
-      return;
+      setUsername(storedUsername);
     }
+  }, []);
 
-    const response = await fetch('http://localhost:4000/getUserData', {
-      method: 'GET',
-      headers: {
-        Authorization: 'Bearer ' + accessToken,
-      },
-    });
+  // Obtener el username desde la API si tenemos el token y no está ya guardado
+  useEffect(() => {
+    async function getUserData() {
+      if (!accessToken || username) return;
 
-    const data = await response.json();
-    setUserData(data);
+      const response = await fetch('http://localhost:4000/getUserData', {
+        method: 'GET',
+        headers: {
+          Authorization: 'Bearer ' + accessToken,
+        },
+      });
 
-    const oneHour = 60 * 60 * 1000;
-    const lastExecution = localStorage.getItem("lastForkExecution");
+      const data = await response.json();
+      localStorage.setItem('username', data.login);
+      setUsername(data.login);
 
-    // Si la última ejecución fue hace menos de una hora, no ejecutar de nuevo
-    if (lastExecution && Date.now() - parseInt(lastExecution) < oneHour) {
-      console.log("⏳ Esperando 1 hora antes de volver a ejecutar fork sync...");
-    } else {
+      const lastExecution = localStorage.getItem("lastForkExecution");
+      const oneHour = 60 * 60 * 1000;
+
+      if (lastExecution && Date.now() - parseInt(lastExecution) < oneHour) {
+        console.log("⏳ Esperando 1 hora antes de volver a ejecutar fork sync...");
+        return;
+      }
+
       setLoading(true);
       try {
         const forkReq = await fetch('http://localhost:4000/manage/forks', {
@@ -78,7 +81,6 @@ const Home = () => {
         const forkRes = await forkReq.json();
         console.log(forkRes);
 
-        // Guardar la hora actual como última ejecución
         localStorage.setItem("lastForkExecution", Date.now().toString());
       } catch (error) {
         console.error("❌ Error fetching fork:", error);
@@ -87,54 +89,17 @@ const Home = () => {
       }
     }
 
-    // Guardar el username solo si no existe aún
-    if (!localStorage.getItem("username")) {
-      localStorage.setItem("username", data.login);
-      console.log("📝 Username saved to localStorage:", data.login);
-    }
-  }
-
-  getUserData();
-}, [accessToken]);
-  
-
-  // useEffect(() => {
-  //   if (!accessToken) return;
-
-  //   const interval = setInterval(async () => {
-  //     try {
-  //       console.log("Checking...")
-  //       const res = await fetch('http://localhost:4000/manage/checkPR', {
-  //         method: 'GET',
-  //         headers: {
-  //           Authorization: 'Bearer ' + accessToken,
-  //         },
-  //       });
-
-  //       const data = await res.json();
-  //       if (data.message?.includes("Fork eliminado")) {
-  //         alert("Your session has ended. Please sign in again.");
-  //         handleLogout(); // Cierra sesión automáticamente
-  //       }
-  //     } catch (err) {
-  //       console.error("Error checking PR status:", err);
-  //     }
-  //   }, 30000); // 30 segundos
-
-  //   // Limpieza cuando se desmonta el componente o cambia el token
-  //   return () => clearInterval(interval);
-  // }, [accessToken]);
-
+    getUserData();
+  }, [accessToken, username]);
 
   const handleLogout = () => {
     localStorage.removeItem('accessToken');
-    localStorage.removeItem('username')
+    localStorage.removeItem('username');
     setAccessToken(null);
-    setUserData(null);
+    setUsername(null);
     window.location.replace('/');
   };
 
-  // Mostrar spinner mientras carga
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
@@ -151,30 +116,29 @@ const Home = () => {
 
       {accessToken ? (
         <>
-        <button
-        onClick={() => navigate('/dashboard')}
-        className="absolute top-4 right-4 bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded shadow-md text-sm"
-      >
-        Dashboard
-      </button>
-          {userData ? (
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="absolute top-4 right-4 bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded shadow-md text-sm"
+          >
+            Dashboard
+          </button>
+          {username ? (
             <div>
               <h3 className="text-3xl mb-6">
-              Welcome <strong>{userData.login}</strong>
-            </h3>
+                Welcome <strong>{username}</strong>
+              </h3>
             </div>
           ) : (
             <p className="mb-6">Loading user...</p>
           )}
 
-          {/* Botones de navegación */}
           <div className="flex flex-wrap justify-center gap-4 mt-2 w-full max-w-4xl">
             {[
               { label: 'Events', path: '/events' },
               { label: 'Newsletter', path: '/newsletter' },
               { label: 'Professor', path: '/professor' },
               { label: 'Project', path: '/projects' },
-              { label: 'Tutorial', path: '/tutorials'},
+              { label: 'Tutorial', path: '/tutorials' },
             ].map(({ label, path }) => (
               <button
                 key={label}
