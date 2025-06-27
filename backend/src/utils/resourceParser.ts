@@ -7,6 +7,9 @@ import * as resourceInterfaces from "./resourceInterfaces.ts";
 import remotePath from "./remotePaths.ts";
 import { format } from "date-fns";
 import * as crypto from "crypto";
+import dotenv from "dotenv";
+
+dotenv.config();
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY as string; 
 
 function decryptToken(text: string): string {

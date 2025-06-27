@@ -1,10 +1,25 @@
-import yaml from "yaml";
+import yaml, { Scalar } from "yaml";
 import fs from "node:fs/promises";
 import * as dirManager from "./dirManager.ts";
 import * as PRManagement from '../prManagement.ts';
 import * as resourceInterfaces from "./resourceInterfaces.ts";
 import remotePath from "./remotePaths.ts";
 import { format } from "date-fns";
+import crypto from 'crypto';
+import dotenv from 'dotenv';
+
+dotenv.config();
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY as string; 
+
+function decryptToken(text: string): string {
+  const parts = text.split(':');
+  const iv = Buffer.from(parts.shift() as string, 'hex');
+  const encryptedText = Buffer.from(parts.join(':'), 'hex');
+  const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY, 'hex'), iv);
+  let decrypted = decipher.update(encryptedText);
+  decrypted = Buffer.concat([decrypted, decipher.final()]);
+  return decrypted.toString();  
+}
 
 //Identifica el tipo de recurso
 export default function resourceIdentifier(data: any) {
@@ -58,9 +73,10 @@ async function parseEvents(data: resourceInterfaces.EventData): Promise<any> {
         const remote = await remotePath(data);
         console.log("Remote Path for the processed resource category: " + remote);
 
+        var decryptedToken = decryptToken(data.githubToken);
         const branchName = await PRManagement.branchNameCreator(data.githubUser, data.name);
-        const branchData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName};
-        const commitData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.name, category: data.resourceCategory, addOrMod: "Modifying"};
+        const branchData = {OWNER: data.githubUser, TOKEN: decryptedToken, branchName: branchName};
+        const commitData = {OWNER: data.githubUser, TOKEN: decryptedToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.name, category: data.resourceCategory, addOrMod: "Modifying"};
     
         await PRManagement.createPR(branchData, commitData);
 
@@ -71,17 +87,23 @@ async function parseEvents(data: resourceInterfaces.EventData): Promise<any> {
 }
 //Parsing para la categoría Newsletter
 async function parseNewsletter(data: resourceInterfaces.NewsletterData): Promise<void> {
+    const formatDate = (dateStr: string) => {
+        return format(new Date(dateStr), "yyyy-MM-dd");
+    };
+
     try{
-        const description = `${data.description}\n`;
+        const description = `${data.description.replace(/^\n+|\n+$/g, "")}\n`;
+        const correctDescription = new Scalar(description);
+        correctDescription.type = 'BLOCK_LITERAL';
         const newsletterData = {
             id: data.id,
             title: data.title,
             author: data.author,
             level: data.level,
-            publication_date: data.publication_date,
+            publication_date: formatDate(data.publication_date),
             link: data.link,
             language: data.language,
-            description: description,
+            description: correctDescription,
             contributor_names: data.contributor_names,
             tags: data.tags,
         }
@@ -95,9 +117,10 @@ async function parseNewsletter(data: resourceInterfaces.NewsletterData): Promise
         const remote = await remotePath(data);
         console.log("Remote Path for the processed resource category: " + remote);
 
+        var decryptedToken = decryptToken(data.githubToken);
         const branchName = await PRManagement.branchNameCreator(data.githubUser, data.title);
-        const branchData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName};
-        const commitData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.title, category: data.resourceCategory, addOrMod: "Modifying"};
+        const branchData = {OWNER: data.githubUser, TOKEN: decryptedToken, branchName: branchName};
+        const commitData = {OWNER: data.githubUser, TOKEN: decryptedToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.title, category: data.resourceCategory, addOrMod: "Modifying"};
     
         await PRManagement.createPR(branchData, commitData);
 
@@ -130,9 +153,10 @@ async function parseProfessor(data: resourceInterfaces.ProfessorData): Promise<v
         const remote = await remotePath(data);
         console.log("Remote Path for the processed resource category: " + remote);
 
+        var decryptedToken = decryptToken(data.githubToken);
         const branchName = await PRManagement.branchNameCreator(data.githubUser, data.name);
-        const branchData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName};
-        const commitData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.name, category: data.resourceCategory, addOrMod: "Modifying"};
+        const branchData = {OWNER: data.githubUser, TOKEN: decryptedToken, branchName: branchName};
+        const commitData = {OWNER: data.githubUser, TOKEN: decryptedToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.name, category: data.resourceCategory, addOrMod: "Modifying"};
     
         await PRManagement.createPR(branchData, commitData);
         
@@ -170,9 +194,10 @@ async function parseProjects(data: resourceInterfaces.ProjectData): Promise<void
         const remote = await remotePath(data);
         console.log("Remote Path for the processed resource category: " + remote);
 
+        var decryptedToken = decryptToken(data.githubToken);
         const branchName = await PRManagement.branchNameCreator(data.githubUser, data.name);
-        const branchData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName};
-        const commitData = {OWNER: data.githubUser, TOKEN: data.githubToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.name, category: data.resourceCategory, addOrMod: "Modifying"};
+        const branchData = {OWNER: data.githubUser, TOKEN: decryptedToken, branchName: branchName};
+        const commitData = {OWNER: data.githubUser, TOKEN: decryptedToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.name, category: data.resourceCategory, addOrMod: "Modifying"};
 
         await PRManagement.createPR(branchData, commitData);
 
