@@ -430,6 +430,10 @@ router.post('/updatepr', async (req: Request, res: Response): Promise<void> => {
 
     const pullRequests = repoResponse.data?.repository?.pullRequests?.nodes ?? [];
 
+    console.log("pullRequests encontrados:", JSON.stringify(pullRequests, null, 2));
+    console.log("Usuario autenticado:", userLogin);
+
+
     if (pullRequests.length === 0) {
       res.status(404).json({
         message: `⚠️ No se encontró ningún Pull Request para la rama '${branchName}'.`
@@ -481,9 +485,11 @@ router.post('/updatepr', async (req: Request, res: Response): Promise<void> => {
     const mutationResponse = await mutationResp.json();
 
     if (mutationResponse.errors) {
+      console.error('Detalles del error en la mutación:', JSON.stringify(mutationResponse.errors, null, 2));
       res.status(500).json({ error: '❌ Error en la mutación', details: mutationResponse.errors });
       return;
     }
+
 
     const updatedPR = mutationResponse.data.markPullRequestReadyForReview.pullRequest;
 

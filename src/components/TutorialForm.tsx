@@ -1,19 +1,18 @@
-import { useState } from "react";
-import { v4 as uuidv4 } from "uuid";
+// TutorialForm.tsx
+import React, { useState, useRef } from "react";
+import MDEditor, { commands } from "@uiw/react-md-editor";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import "@uiw/react-md-editor/markdown-editor.css";
+import "@uiw/react-markdown-preview/markdown.css";
 
-interface Step {
-  id: string;
-  text: string;
-  images: File[];
-}
-
-const languages = {es: "Español", en: "English", fr: "Français", de: "Deutsch"};
+const languages = { es: "Español", en: "English", fr: "Français", de: "Deutsch" };
 const levels = ["Beginner", "Intermediate", "Advanced"];
 
-const TutorialForm = () => {
+const TutorialForm: React.FC = () => {
   const navigate = useNavigate();
+
+  // ─── Metadata ────────────────────────────────────────────────────────
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [language, setLanguage] = useState("");
@@ -21,238 +20,217 @@ const TutorialForm = () => {
   const [tags, setTags] = useState<string[]>([]);
   const [author, setAuthor] = useState("");
   const [cover, setCover] = useState<File | null>(null);
-  const [steps, setSteps] = useState<Step[]>([{
-    id: uuidv4(),
-    text: "",
-    images: [],
-  }]);
 
-  const handleStepChange = (id: string, text: string) => {
-    setSteps((prev) =>
-      prev.map((step) => (step.id === id ? { ...step, text } : step))
-    );
-  };
+  // ─── Contenido + imágenes ────────────────────────────────────────────
+  const [content, setContent] = useState<string>("");
+  const [contentImages, setContentImages] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageUpload = (id: string, files: FileList | null) => {
-    if (!files) return;
-    setSteps((prev) =>
-      prev.map((step) =>
-        step.id === id ? { ...step, images: Array.from(files) } : step
-      )
-    );
-  };
+  const handleTagChange = (val: string) =>
+    setTags(val.split(",").map((t) => t.trim()));
 
-  const addStep = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSteps([...steps, { id: uuidv4(), text: "", images: [] }]);
-  };
+  const handleContentImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    if (!language) {
+      alert("Please select a language before inserting images.");
+      return;
+    }
+    const files = Array.from(e.target.files);
+    const existingCount = contentImages.length;
+    // Carpeta según idioma
+    const folder = `assets/${language}`;
 
-  const removeStep = (id: string) => {
-    setSteps((prev) => prev.filter((step) => step.id !== id));
-  };
-
-  const handleTagChange = (value: string) => {
-    setTags(value.split(",").map((tag) => tag.trim()));
-  };
-
-  const generateMarkdown = () => {
-    let content = `---\nname: ${title}\ndescription: ${description}\n---\n\n![cover](assets/cover.webp)\n\n`;
-    steps.forEach((step, i) => {
-      content += `## Step ${i + 1}\n\n${step.text}\n\n`;
-      step.images.forEach((_, idx) => {
-        content += `![Step ${i + 1} - image ${idx + 1}](assets/tutorial-id/${idx + 1}.webp)\n\n`;
-      });
+    // Generar placeholders numerados
+    const placeholders = files.map((file, idx) => {
+      const num = String(existingCount + idx + 1).padStart(2, "0");
+      return `\n\n![${file.name}](${folder}/${num}.webp)\n\n`;
     });
-    return content;
+
+    // Actualizar estado
+    setContentImages((prev) => [...prev, ...files]);
+    setContent((prev) => prev + placeholders.join(""));
   };
 
+  // ─── Markdown + frontmatter ─────────────────────────────────────────
+  const generateMarkdown = () => {
+    return `---
+name: ${title}
+description: ${description}
+---
+
+![cover](assets/cover.webp)
+
+${content}`.trim();
+  };
+
+  // ─── Submit ──────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    let githubUser;
-    let githubToken;
-    try{
-      githubUser = localStorage.getItem('username')
-      githubToken = localStorage.getItem('accessToken')
-    }catch{
-      console.error('Could not retrieve github user.')
-    }
+    const githubUser = localStorage.getItem("username");
+    const githubToken = localStorage.getItem("accessToken");
 
     const payload = {
-      resourceCategory: 'Tutorial',
-      title: title,
-      language: language,
+      resourceCategory: "Tutorial",
+      title,
+      language,
       markdown: generateMarkdown(),
       thumbnail: cover,
-      githubUser: githubUser,
-      githubToken: githubToken,
-    }
+      githubUser,
+      githubToken,
+    };
 
     const formPayload = new FormData();
-      Object.entries(payload).forEach(([key, value]) => {
-      if (Array.isArray(value)) {
-        value.forEach((item, index) => {
-          formPayload.append(`${key}[${index}]`, item);
-        });
-      } else if (value instanceof File) {
-        formPayload.append(key, value);
-      } else {
-        formPayload.append(key, value as string);
+    Object.entries(payload).forEach(([key, val]) => {
+      if (Array.isArray(val)) {
+        val.forEach((v, i) => formPayload.append(`${key}[${i}]`, v));
+      } else if (val instanceof File) {
+        formPayload.append(key, val);
+      } else if (val != null) {
+        formPayload.append(key, val as string);
       }
     });
-
-    try{
-      const stepsImages: File[] = steps.flatMap(step => step.images);
-      stepsImages.forEach(image => {
-        formPayload.append("stepsImages", image);
-      })
-    }catch(err){
-      console.error('Could not process images: ' + err);
-    }
+    // Adjuntar imágenes
+    contentImages.forEach((img) => formPayload.append("stepsImages", img));
 
     try {
-      const response = await axios.post("http://localhost:4000/upload-tutorial", formPayload, {
-      headers: { "Content-Type": "multipart/form-data" },
-       });
-
-       if (response.status === 200) {
-         console.log("Tutorial saved:", response.data);
-         navigate("/");
-       }
-     } catch (err) {
-       console.error("Error submitting data:", err);
-     }
+      const res = await axios.post(
+        "http://localhost:4000/upload-tutorial",
+        formPayload,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      if (res.status === 200) navigate("/");
+    } catch (err) {
+      console.error("Error submitting tutorial:", err);
+    }
   };
 
+  // ─── Comando custom para “image” en toolbar ─────────────────────────
+  const mdCommands = commands.getCommands().map((cmd) =>
+    cmd.name === "image"
+      ? {
+          ...cmd,
+          execute: () => {
+            fileInputRef.current?.click();
+            return "";
+          },
+        }
+      : cmd
+  );
+
   return (
-  <form onSubmit={handleSubmit}>  
-    <div className="flex flex-col lg:flex-row gap-6 min-h-screen mx-2 w-4/5 px-6 py-8 bg-gray-100 text-black">
-      {/* Formulario principal */}
-      {/* Añadimos flex-grow-0 flex-shrink-1 flex-basis-0 */}
-      <div className=" w-full min-w-0 space-y-4 bg-white p-4 rounded flex-grow-0 flex-shrink-1 flex-basis-0">
-        <h1 className="text-2xl font-bold">Create Tutorial</h1>
+    <form onSubmit={handleSubmit}>
+      <div className="flex flex-col lg:flex-row gap-6 min-h-screen w-4/5 mx-auto px-6 py-8 bg-gray-100 text-black">        {/* ─── IZQ: metadata + editor ─────────────────────────────────── */}
+        <div className="w-full bg-white p-4 rounded space-y-4">
+          <h1 className="text-2xl font-bold">Create Tutorial</h1>
 
-        <input
-          className="w-full p-2 border rounded break-words"
-          placeholder="Tutorial title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-
-        <textarea
-          className="w-full p-2 border rounded resize-none h-24 break-words break-all"
-          placeholder="Tutorial description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-
-        <div className="flex gap-4 flex-wrap">
-          <select
-            className="p-2 border rounded"
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-          >
-            <option value="" disabled>Select a language</option>
-            {Object.entries(languages).map(([code, name]) => (
-              <option key={code} value={code}>
-                {name}
-              </option>
-            ))}
-          </select>
-
-          <select
-            className="p-2 border rounded"
-            value={level}
-            onChange={(e) => setLevel(e.target.value)}
-          >
-            {levels.map((lvl) => (
-              <option key={lvl}>{lvl}</option>
-            ))}
-          </select>
-        </div>
-
-        <input
-          className="w-full p-2 border rounded"
-          placeholder="Tags (comma separated)"
-          value={tags.join(", ")}
-          onChange={(e) => handleTagChange(e.target.value)}
-        />
-
-        <input
-          className="w-full p-2 border rounded"
-          placeholder="Author name"
-          value={author}
-          onChange={(e) => setAuthor(e.target.value)}
-        />
-
-        <div>
-          <label className="block font-semibold">Cover (webp required)</label>
+          {/* Título & Descripción */}
           <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setCover(e.target.files?.[0] || null)}
+            className="w-full p-2 border rounded"
+            placeholder="Tutorial title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
           />
-        </div>
+          <textarea
+            className="w-full p-2 border rounded h-24"
+            placeholder="Tutorial description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
 
-        <div className="space-y-6">
-          <h2 className="text-xl font-semibold">Steps</h2>
-          {steps.map((step, index) => (
-            <div
-              key={step.id}
-              className="border p-4 rounded bg-white w-full break-words"
+          {/* Language & Level */}
+          <div className="flex gap-4 flex-wrap">
+            <select
+              className="p-2 border rounded"
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
             >
-              <label className="font-semibold">Step {index + 1}</label>
-              <textarea
-                className="w-full p-2 border rounded resize-none h-24 my-2 break-words overflow-x-hidden"
-                placeholder="Step description"
-                value={step.text}
-                onChange={(e) => handleStepChange(step.id, e.target.value)}
+              <option value="" disabled>
+                Select a language
+              </option>
+              {Object.entries(languages).map(([code, name]) => (
+                <option key={code} value={code}>
+                  {name}
+                </option>
+              ))}
+            </select>
+            <select
+              className="p-2 border rounded"
+              value={level}
+              onChange={(e) => setLevel(e.target.value)}
+            >
+              {levels.map((lvl) => (
+                <option key={lvl} value={lvl}>
+                  {lvl}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Tags & Author */}
+          <input
+            className="w-full p-2 border rounded"
+            placeholder="Tags (comma separated)"
+            value={tags.join(", ")}
+            onChange={(e) => handleTagChange(e.target.value)}
+          />
+          <input
+            className="w-full p-2 border rounded"
+            placeholder="Author name"
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+          />
+
+          {/* Cover */}
+          <div>
+            <label className="block font-semibold">Cover (webp required)</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setCover(e.target.files?.[0] || null)}
+            />
+          </div>
+
+          {/* Contenido */}
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold">Contenido</h2>
+            <button
+              type="button"
+              className="px-3 py-1 border rounded text-sm"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              Insert Image
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handleContentImageUpload}
+            />
+
+            <div data-color-mode="light">
+              <MDEditor
+                value={content}
+                onChange={(val) => setContent(val || "")}
+                height={300}
+                preview="live"
+                commands={mdCommands}
               />
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={(e) => handleImageUpload(step.id, e.target.files)}
-              />
-              <button
-                className="mt-2 text-red-600 text-sm"
-                onClick={() => removeStep(step.id)}
-              >
-                Remove step
-              </button>
             </div>
-          ))}
+          </div>
 
           <button
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-            onClick={addStep}
+            type="submit"
+            className="w-full p-3 bg-orange-600 rounded text-white font-semibold hover:bg-orange-700"
           >
-            + Add Step
+            Send
           </button>
-        </div> 
-        <button
-        type="submit"
-        className="p-3 bg-orange-600 rounded text-white font-semibold hover:bg-blue-700 transition w-full"
-        >
-          Send
-        </button>
-      </div>
-      
-      {/* Panel de Preview */}
-      {/* Mantenemos overflow-auto, añadimos flex-grow-0 flex-shrink-1 flex-basis-0 */}
-      <div className="lg:w-4/6 w-full min-w-0 bg-white p-4 rounded shadow overflow-auto max-h-[80vh] flex-grow-0 flex-shrink-1 flex-basis-0">
-        <h2 className="text-xl font-bold mb-2">Preview</h2>
-        <div className="w-full overflow-x-auto max-w-full">
-          {/* Asegúrate de que estas clases sigan en el pre */}
-          <pre className="w-full min-w-0 whitespace-pre-wrap break-words break-all text-sm">
-            {generateMarkdown()}
-          </pre>
         </div>
       </div>
-    </div>
-  </form>
-);
-  
+    </form>
+  );
 };
 
 export default TutorialForm;

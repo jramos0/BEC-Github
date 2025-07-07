@@ -34,6 +34,14 @@ const ProjectForm = () => {
     githubToken: "",
   });
 
+  const [enabledLinks, setEnabledLinks] = useState({
+  website: false,
+  twitter: false,
+  github: false,
+  nostr: false,
+});
+
+
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
     if (storedUsername) {
@@ -170,18 +178,67 @@ const ProjectForm = () => {
       )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {(["website", "twitter", "github", "nostr"] as const).map((field) => (
-          <input
-            key={field}
-            type="text"
-            placeholder={`${field.charAt(0).toUpperCase() + field.slice(1)} URL`}
-            className="p-3 rounded bg-gray-800 text-white"
-            value={formData.links[field]}
-            onChange={(e) => handleLinkChange(field, e.target.value)}
-          />
-        ))}
-      </div>
+<div className="flex flex-col gap-2">
+  <label className="text-sm text-gray-400">Select which links to add</label>
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+    {Object.keys(enabledLinks).map((key) => (
+      <label key={key} className="inline-flex items-center text-white space-x-2">
+        <input
+          type="checkbox"
+          checked={enabledLinks[key as keyof typeof enabledLinks]}
+          onChange={() =>
+            setEnabledLinks((prev) => ({
+              ...prev,
+              [key]: !prev[key as keyof typeof enabledLinks],
+            }))
+          }
+          className="form-checkbox h-4 w-4 text-orange-600 rounded border-gray-600 bg-gray-900 focus:ring-0"
+        />
+        <span className="capitalize">{key}</span>
+      </label>
+    ))}
+  </div>
+
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+    {enabledLinks.website && (
+      <input
+        type="text"
+        placeholder="Website URL"
+        className="p-3 rounded bg-gray-800 text-white"
+        value={formData.links.website}
+        onChange={(e) => handleLinkChange("website", e.target.value)}
+      />
+    )}
+    {enabledLinks.twitter && (
+      <input
+        type="text"
+        placeholder="Twitter URL"
+        className="p-3 rounded bg-gray-800 text-white"
+        value={formData.links.twitter}
+        onChange={(e) => handleLinkChange("twitter", e.target.value)}
+      />
+    )}
+    {enabledLinks.github && (
+      <input
+        type="text"
+        placeholder="Github URL"
+        className="p-3 rounded bg-gray-800 text-white"
+        value={formData.links.github}
+        onChange={(e) => handleLinkChange("github", e.target.value)}
+      />
+    )}
+    {enabledLinks.nostr && (
+      <input
+        type="text"
+        placeholder="Nostr URL"
+        className="p-3 rounded bg-gray-800 text-white"
+        value={formData.links.nostr}
+        onChange={(e) => handleLinkChange("nostr", e.target.value)}
+      />
+    )}
+  </div>
+</div>
+
 
       <div className="flex flex-col gap-2">
       <label className="text-sm text-gray-400">Tags</label>

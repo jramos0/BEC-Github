@@ -3,7 +3,7 @@ import axios from 'axios';
 //Manages branch creation, data commit and PR
 export async function createPR(branchData: any, commitData: any): Promise<any> {
     const category = commitData.category.toUpperCase();
-    const UPSTREAM_OWNER = 'jramos0';
+    const UPSTREAM_OWNER = 'jramos0'; // Owner of the upstream repository
     const UPSTREAM_REPO = 'bitcoin-educational-content';
 
     try{
