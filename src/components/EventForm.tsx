@@ -169,7 +169,7 @@ const EventForm = () => {
         </select>
       </div>
 
-      <div className="flex gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {formData.tags.map((tag, index) => (
           <select key={index} className="p-3 rounded bg-gray-800 text-white" value={tag} onChange={(e) => handleTagChange(index, e.target.value)}>
             <option value="">Select a tag</option>
@@ -177,6 +177,7 @@ const EventForm = () => {
           </select>
         ))}
       </div>
+      <label className="text-xs text-gray-400"> * Select at least two tags.</label>
 
       <button type="submit" className="p-3 bg-orange-600 rounded text-white font-semibold hover:bg-blue-700 transition">Send</button>
     </form>

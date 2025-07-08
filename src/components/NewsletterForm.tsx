@@ -18,7 +18,7 @@ const NewsletterForm = () => {
     website: "",
     language: "",
     description: "",
-    tags: ["", ""],
+    tags: ["", "", ""],
     thumbnail: null as File | null,
     githubUser: "",
     githubToken: "",
@@ -167,6 +167,7 @@ const NewsletterForm = () => {
             </select>
           ))}
         </div>
+        <label className="text-xs text-gray-400"> * Select at least two tags.</label>
       </div>
 
       <div className="flex flex-row items-center gap-4">
