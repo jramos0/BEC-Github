@@ -160,7 +160,7 @@ const ProjectForm = () => {
 
       <div className="flex flex-row items-center gap-4">
         <label className="cursor-pointer bg-gray-800 hover:bg-orange-700 text-white text-sm px-5 py-3 rounded-md transition shadow-md w-full text-center">
-        Upload Thumbnail
+        Upload Logo
         <input
           type="file"
           accept="image/*"
@@ -259,6 +259,7 @@ const ProjectForm = () => {
           </select>
         ))}
       </div>
+      <label className="text-xs text-gray-400"> * Select at least two tags.</label>
     </div>
 
       <button

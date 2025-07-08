@@ -71,7 +71,7 @@ async function parseEvents(data: resourceInterfaces.EventData, image: any): Prom
                 website: data.website
             },
             project_id: data.project_id,
-            tags: data.tags,
+            tags: (data.tags || []).filter(tag => tag && tag.trim() !== ""),
         };
 
         const parentPath = await dirManager.createFolder(data.name);
@@ -116,7 +116,7 @@ async function parseNewsletter(data: resourceInterfaces.NewsletterData, image: a
             language: data.language,
             description: description,
             contributor_names: data.githubUser,
-            tags: data.tags,
+            tags: (data.tags || []).filter(tag => tag && tag.trim() !== ""),
         }
 
         const parentPath = await dirManager.createFolder(data.title);
@@ -158,7 +158,7 @@ async function parseProfessor(data: resourceInterfaces.ProfessorData, image: any
             ...(data.lightning_address && { tips: { lightning_address: data.lightning_address } }),
             company: data.company ? data.company : undefined ,
             affiliations: data.affiliations,
-            tags: data.tags,
+            tags: (data.tags || []).filter(tag => tag && tag.trim() !== ""),
         }
         const professorENData = {
             bio: data.bio,
@@ -202,7 +202,7 @@ async function parseProjects(data: resourceInterfaces.ProjectData, image: any): 
             ...(links[0 || 1 || 2 || 3] && {links: { website: links[0], twitter: links[1], github: links[2], nostr: links[3] } }),
             category: data.category,
             original_language: data.original_language,
-            tags: data.tags,
+            tags: (data.tags || []).filter(tag => tag && tag.trim() !== ""),
         }
         const projectENData = {
             description: data.description,

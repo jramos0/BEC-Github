@@ -61,7 +61,7 @@ async function parseEvents(data: resourceInterfaces.EventData): Promise<any> {
             language: data.language,
             links: data.links,
             project_id: data.project_id,
-            tags: data.tags,
+            tags: (data.tags || []).filter(tag => tag && tag.trim() !== ""),
         };
 
         const parentPath = await dirManager.createFolder(data.name);
@@ -105,7 +105,7 @@ async function parseNewsletter(data: resourceInterfaces.NewsletterData): Promise
             language: data.language,
             description: correctDescription,
             contributor_names: data.contributor_names,
-            tags: data.tags,
+            tags: (data.tags || []).filter(tag => tag && tag.trim() !== ""),
         }
 
         const parentPath = await dirManager.createFolder(data.title);
@@ -141,7 +141,7 @@ async function parseProfessor(data: resourceInterfaces.ProfessorData): Promise<v
             ...(data.tips && { tips: data.tips }),
             company: data.company ? data.company : undefined ,
             affiliations: data.affiliations,
-            tags: data.tags,
+            tags: (data.tags || []).filter(tag => tag && tag.trim() !== ""),
         }
 
         const parentPath = await dirManager.createFolder(data.name);
@@ -176,7 +176,7 @@ async function parseProjects(data: resourceInterfaces.ProjectData): Promise<void
             ...(data.links && { links: data.links }),
             category: data.category,
             original_language: data.original_language,
-            tags: data.tags,
+            tags: (data.tags || []).filter(tag => tag && tag.trim() !== ""),
             contributor_names: data.contributor_names,
         }
         const exclude = ['resourceCategory', 'githubUser', 'githubToken'];
