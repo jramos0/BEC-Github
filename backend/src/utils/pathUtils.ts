@@ -2,66 +2,90 @@
  * Parse and normalize PlanB resource URLs into GitHub content paths
  */
 export function extractPathFromUrl(url: string): string {
-  // Strip off URL fragment or query parameters
   const cleanUrl = url.split(/[#?]/)[0];
 
-  // Determine base path and type
-  let base: string;
-  if (cleanUrl.includes("/professor/")) {
-    base = "/professor/";
-  } else if (cleanUrl.includes("/events/")) {
-    base = "/events/";
-  } else {
-    base = "/resources/";
+  const baseMap: Record<string, string> = {
+    "/professor/": "professors",
+    "/events/": "events",
+    "/resources/": "resources",
+    "/tutorials/wallet/": "wallet",
+    "/tutorials/node/": "node",
+    "/tutorials/mining/": "mining",
+    "/tutorials/exchange/": "exchange",
+    "/tutorials/business/": "business",
+    "/tutorials/privacy/": "privacy",
+    "/tutorials/computer-security/": "computer-security",
+    "/tutorials/contribution/": "contribution",
+  };
+
+  const matchingBase = Object.keys(baseMap)
+    .sort((a, b) => b.length - a.length) 
+    .find(base => cleanUrl.includes(base));
+
+  if (!matchingBase) {
+    console.error(`❌ Unknown URL base: ${url}`);
+    throw new Error("Unknown URL base");
   }
 
-  // Extract path after base
-  const parts = cleanUrl.split(base)[1];
-  if (!parts) {
+  const section = baseMap[matchingBase];
+  const relativePath = cleanUrl.split(matchingBase)[1];
+  if (!relativePath) {
     console.error(`❌ Invalid URL structure: ${url}`);
     throw new Error("Invalid URL");
   }
 
-  let type: string;
-  let rawSlug: string;
+  const parts = relativePath.split("/").filter(Boolean);
 
-  if (base === "/professor/") {
-    type = "professors";
-    rawSlug = parts;
-  } else if (base === "/events/") {
-    type = "events";
-    rawSlug = parts; // This is now expected to be the event's name (slug), not a UUID
+  let slug = "";
+  if (section === "professors" || section === "events") {
+    slug = parts[0];
   } else {
-    [type, rawSlug] = parts.split("/");
+    if (parts.length < 2) {
+      console.error(`❌ Incomplete URL parts: ${relativePath}`);
+      throw new Error("Incomplete URL");
+    }
+    slug = parts[1];
   }
 
-  if (!type || !rawSlug) {
-    console.error(`❌ Incomplete URL parts: ${parts}`);
-    throw new Error("Incomplete URL");
-  }
+  // Remover UUID si lo hay
+  slug = slug.replace(
+    /-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+    ""
+  );
 
-  // Remove trailing UUID if present (only for types other than events)
-  const slug = type !== "events"
-    ? rawSlug.replace(
-        /-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
-        ""
-      )
-    : rawSlug;
+  console.log("🔍 extractPathFromUrl:", { section, slug });
 
-  console.log("🔍 extractPathFromUrl:", { type, rawSlug, slug });
-
-  // Build correct GitHub path per resource type
-  switch (type) {
-    case "newsletters":
-      return `resources/newsletters/${slug}/newsletter.yml`;
-    case "projects":
-      return `resources/projects/${slug}/project.yml`;
+  // Construcción del path final
+  switch (section) {
     case "professors":
       return `professors/${slug}/professor.yml`;
     case "events":
       return `events/${slug}/event.yml`;
-    default:
-      console.error(`❌ Unknown resource type: ${type}`);
-      throw new Error(`Unknown resource type: ${type}`);
+    case "wallet":
+      return `tutorials/wallet/${slug}/tutorial.yml`;
+    case "node":
+      return `tutorials/node/${slug}/tutorial.yml`;
+    case "mining":
+      return `tutorials/mining/${slug}/tutorial.yml`;
+    case "exchange":
+      return `tutorials/exchange/${slug}/tutorial.yml`;
+    case "business":
+      return `tutorials/business/${slug}/tutorial.yml`;
+    case "privacy":
+      return `tutorials/privacy/${slug}/tutorial.yml`;
+    case "computer-security":
+      return `tutorials/computer-security/${slug}/tutorial.yml`;
+    case "contribution":
+      return `tutorials/contribution/${slug}/tutorial.yml`;
+    case "resources":
+      if (parts[0] === "newsletters") {
+        return `resources/newsletters/${slug}/newsletter.yml`;
+      } else if (parts[0] === "projects") {
+        return `resources/projects/${slug}/project.yml`;
+      }
+      break;
   }
+
+  console.error(`❌ Unknown section or type: ${section}`);
+  throw new Error(`Unknown section or type: ${section}`);
 }
