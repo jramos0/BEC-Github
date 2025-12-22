@@ -168,6 +168,7 @@ const EventForm = () => {
           {Object.entries(supportedLanguages).map(([code, name]) => (<option key={code} value={code}>{name}</option>))}
         </select>
       </div>
+      <label className="text-xs text-gray-400"> * Select at least one language.</label>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {formData.tags.map((tag, index) => (

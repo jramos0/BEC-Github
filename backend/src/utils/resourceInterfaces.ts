@@ -82,6 +82,7 @@ export interface ProjectData {
 
 export interface TutorialData {
     resourceCategory: string;
+    category: string;
     title: string;
     language: String,
     markdown: String;
