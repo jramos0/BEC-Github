@@ -5,30 +5,140 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "@uiw/react-md-editor/markdown-editor.css";
 import "@uiw/react-markdown-preview/markdown.css";
+import { tutorialSubcategories, getParentCategory } from "../constants/tutorialCategories";
+import { v4 as uuidv4 } from "uuid";
 
 const languages = { es: "Español", en: "English", fr: "Français", de: "Deutsch" };
 const levels = ["Beginner", "Intermediate", "Advanced"];
+
+// Validation error interface
+interface ValidationError {
+  field: string;
+  message: string;
+}
 
 const TutorialForm: React.FC = () => {
   const navigate = useNavigate();
 
   // ─── Metadata ────────────────────────────────────────────────────────
+  const [id] = useState(uuidv4());
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [subcategory, setSubcategory] = useState(""); // User selects subcategory
   const [language, setLanguage] = useState("");
   const [level, setLevel] = useState("Beginner");
   const [tags, setTags] = useState<string[]>([]);
   const [author, setAuthor] = useState("");
   const [cover, setCover] = useState<File | null>(null);
+  const [logo, setLogo] = useState<File | null>(null);
 
   // ─── Contenido + imágenes ────────────────────────────────────────────
   const [content, setContent] = useState<string>("");
   const [contentImages, setContentImages] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleTagChange = (val: string) =>
-    setTags(val.split(",").map((t) => t.trim()));
+  // ─── Validation ──────────────────────────────────────────────────────
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
 
+  // ─── Custom commands: Disable H1, keep H2-H6 ─────────────────────────
+  const customCommands = [
+    commands.bold,
+    commands.italic,
+    commands.strikethrough,
+    commands.hr,
+    commands.title2,  // H2 - Allowed
+    commands.title3,  // H3 - Allowed
+    commands.title4,  // H4 - Allowed
+    commands.title5,  // H5 - Allowed
+    commands.title6,  // H6 - Allowed
+    commands.divider,
+    commands.link,
+    commands.quote,
+    commands.code,
+    commands.codeBlock,
+    commands.unorderedListCommand,
+    commands.orderedListCommand,
+    commands.checkedListCommand,
+  ];
+
+  // Customize the image command to use our file picker
+  const imageCommand = {
+    ...commands.image,
+    execute: () => {
+      fileInputRef.current?.click();
+      return "";
+    },
+  };
+
+  const finalCommands = [...customCommands, imageCommand];
+
+  // ─── Validation Functions ────────────────────────────────────────────
+  const validateContent = (contentValue: string): ValidationError[] => {
+    const errors: ValidationError[] = [];
+
+    // Check for H1 headers (# at start of line or after newline)
+    if (/^#\s/m.test(contentValue) || /\n#\s/.test(contentValue)) {
+      errors.push({
+        field: "content",
+        message: "❌ H1 headers (#) are not allowed. Please use H2 (##) or lower.",
+      });
+    }
+
+    // Check for excessive empty lines (3 or more consecutive newlines)
+    if (/\n\n\n+/.test(contentValue)) {
+      errors.push({
+        field: "content",
+        message: "⚠️ Multiple empty lines detected. Content will be auto-formatted to remove extra spacing.",
+      });
+    }
+
+    return errors;
+  };
+
+  const validateForm = (): boolean => {
+    const errors: ValidationError[] = [];
+
+    if (!title.trim()) {
+      errors.push({ field: "title", message: "Title is required" });
+    }
+
+    if (!description.trim()) {
+      errors.push({ field: "description", message: "Description is required" });
+    }
+
+    if (!subcategory) {
+      errors.push({ field: "subcategory", message: "Subcategory is required" });
+    }
+
+    if (!language) {
+      errors.push({ field: "language", message: "Language is required" });
+    }
+
+    if (!cover) {
+      errors.push({ field: "cover", message: "Cover image is required" });
+    }
+
+    if (!logo) {
+      errors.push({ field: "logo", message: "Logo image is required" });
+    }
+
+    if (!content.trim()) {
+      errors.push({ field: "content", message: "Content cannot be empty" });
+    }
+
+    // Add content validation errors
+    const contentErrors = validateContent(content);
+    errors.push(...contentErrors);
+
+    setValidationErrors(errors);
+    return errors.length === 0;
+  };
+
+  // ─── Tag Handling ────────────────────────────────────────────────────
+  const handleTagChange = (val: string) =>
+    setTags(val.split(",").map((t) => t.trim()).filter(t => t));
+
+  // ─── Image Upload ────────────────────────────────────────────────────
   const handleContentImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     if (!language) {
@@ -37,18 +147,34 @@ const TutorialForm: React.FC = () => {
     }
     const files = Array.from(e.target.files);
     const existingCount = contentImages.length;
-    // Carpeta según idioma
     const folder = `assets/${language}`;
 
-    // Generar placeholders numerados
+    // Generate numbered placeholders
     const placeholders = files.map((file, idx) => {
       const num = String(existingCount + idx + 1).padStart(2, "0");
       return `\n\n![${file.name}](${folder}/${num}.webp)\n\n`;
     });
 
-    // Actualizar estado
+    // Update state
     setContentImages((prev) => [...prev, ...files]);
     setContent((prev) => prev + placeholders.join(""));
+  };
+
+  // ─── Content Change Handler with Validation ──────────────────────────
+  const handleContentChange = (val: string | undefined) => {
+    if (!val) {
+      setContent("");
+      return;
+    }
+
+    // Auto-format: Remove excessive empty lines (keep max 2 newlines = 1 empty line)
+    const formatted = val.replace(/\n{3,}/g, "\n\n");
+
+    setContent(formatted);
+
+    // Real-time validation
+    const errors = validateContent(formatted);
+    setValidationErrors(errors);
   };
 
   // ─── Markdown + frontmatter ─────────────────────────────────────────
@@ -67,15 +193,37 @@ ${content}`.trim();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validate before submission
+    if (!validateForm()) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
     const githubUser = localStorage.getItem("username");
     const githubToken = localStorage.getItem("accessToken");
 
+    // Get parent category from subcategory
+    const category = getParentCategory(subcategory);
+
+    if (!category) {
+      alert("Invalid subcategory selected");
+      return;
+    }
+
     const payload = {
+      id,
       resourceCategory: "Tutorial",
+      subcategory, // Store subcategory for reference
+      category, // Parent category for folder structure
       title,
+      description,
       language,
+      level,
+      tags,
+      author,
       markdown: generateMarkdown(),
       thumbnail: cover,
+      logo: logo,
       githubUser,
       githubToken,
     };
@@ -90,7 +238,8 @@ ${content}`.trim();
         formPayload.append(key, val as string);
       }
     });
-    // Adjuntar imágenes
+
+    // Attach images
     contentImages.forEach((img) => formPayload.append("stepsImages", img));
 
     try {
@@ -99,107 +248,202 @@ ${content}`.trim();
         formPayload,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
-      if (res.status === 200) navigate("/");
+      if (res.status === 200) {
+        alert("Tutorial submitted successfully!");
+        navigate("/");
+      }
     } catch (err) {
       console.error("Error submitting tutorial:", err);
+      alert("Failed to submit tutorial. Please try again.");
     }
   };
 
-  // ─── Comando custom para “image” en toolbar ─────────────────────────
-  const mdCommands = commands.getCommands().map((cmd) =>
-    cmd.name === "image"
-      ? {
-          ...cmd,
-          execute: () => {
-            fileInputRef.current?.click();
-            return "";
-          },
-        }
-      : cmd
-  );
-
   return (
     <form onSubmit={handleSubmit}>
-      <div className="flex flex-col lg:flex-row gap-6 min-h-screen w-4/5 mx-auto px-6 py-8 bg-gray-100 text-black">        {/* ─── IZQ: metadata + editor ─────────────────────────────────── */}
+      <div className="flex flex-col lg:flex-row gap-6 min-h-screen w-4/5 mx-auto px-6 py-8 bg-gray-100 text-black">
         <div className="w-full bg-white p-4 rounded space-y-4">
           <h1 className="text-2xl font-bold">Create Tutorial</h1>
 
-          {/* Título & Descripción */}
-          <input
-            className="w-full p-2 border rounded"
-            placeholder="Tutorial title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          <textarea
-            className="w-full p-2 border rounded h-24"
-            placeholder="Tutorial description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
+          {/* Validation Errors Banner */}
+          {validationErrors.length > 0 && (
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg
+                    className="h-5 w-5 text-red-500"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">
+                    Please fix the following errors:
+                  </h3>
+                  <ul className="mt-2 text-sm text-red-700 list-disc list-inside space-y-1">
+                    {validationErrors.map((error, idx) => (
+                      <li key={idx}>{error.message}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Title */}
+          <div>
+            <label className="block text-sm font-semibold mb-1">Tutorial Title *</label>
+            <input
+              className="w-full p-2 border rounded"
+              placeholder="Enter tutorial title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-semibold mb-1">Description *</label>
+            <textarea
+              className="w-full p-2 border rounded h-24"
+              placeholder="Brief description of the tutorial"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              required
+            />
+          </div>
+
+          {/* Subcategory Dropdown */}
+          <div>
+            <label className="block text-sm font-semibold mb-1">Subcategory *</label>
+            <select
+              className="w-full p-2 border rounded"
+              value={subcategory}
+              onChange={(e) => setSubcategory(e.target.value)}
+              required
+            >
+              <option value="" disabled>
+                Select tutorial subcategory
+              </option>
+              {tutorialSubcategories.map((sub) => (
+                <option key={sub.value} value={sub.value}>
+                  {sub.label}
+                </option>
+              ))}
+            </select>
+            {subcategory && (
+              <p className="text-xs text-gray-500 mt-1">
+                Category: {getParentCategory(subcategory)}
+              </p>
+            )}
+          </div>
 
           {/* Language & Level */}
           <div className="flex gap-4 flex-wrap">
-            <select
-              className="p-2 border rounded"
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-            >
-              <option value="" disabled>
-                Select a language
-              </option>
-              {Object.entries(languages).map(([code, name]) => (
-                <option key={code} value={code}>
-                  {name}
+            <div className="flex-1">
+              <label className="block text-sm font-semibold mb-1">Language *</label>
+              <select
+                className="w-full p-2 border rounded"
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                required
+              >
+                <option value="" disabled>
+                  Select language
                 </option>
-              ))}
-            </select>
-            <select
-              className="p-2 border rounded"
-              value={level}
-              onChange={(e) => setLevel(e.target.value)}
-            >
-              {levels.map((lvl) => (
-                <option key={lvl} value={lvl}>
-                  {lvl}
-                </option>
-              ))}
-            </select>
+                {Object.entries(languages).map(([code, name]) => (
+                  <option key={code} value={code}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-semibold mb-1">Difficulty Level</label>
+              <select
+                className="w-full p-2 border rounded"
+                value={level}
+                onChange={(e) => setLevel(e.target.value)}
+              >
+                {levels.map((lvl) => (
+                  <option key={lvl} value={lvl}>
+                    {lvl}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Tags & Author */}
-          <input
-            className="w-full p-2 border rounded"
-            placeholder="Tags (comma separated)"
-            value={tags.join(", ")}
-            onChange={(e) => handleTagChange(e.target.value)}
-          />
-          <input
-            className="w-full p-2 border rounded"
-            placeholder="Author name"
-            value={author}
-            onChange={(e) => setAuthor(e.target.value)}
-          />
-
-          {/* Cover */}
           <div>
-            <label className="block font-semibold">Cover (webp required)</label>
+            <label className="block text-sm font-semibold mb-1">Tags</label>
+            <input
+              className="w-full p-2 border rounded"
+              placeholder="bitcoin, tutorial, beginner (comma separated)"
+              value={tags.join(", ")}
+              onChange={(e) => handleTagChange(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold mb-1">Author Name</label>
+            <input
+              className="w-full p-2 border rounded"
+              placeholder="Your name"
+              value={author}
+              onChange={(e) => setAuthor(e.target.value)}
+            />
+          </div>
+
+          {/* Cover Image */}
+          <div>
+            <label className="block text-sm font-semibold mb-1">Cover Image *</label>
             <input
               type="file"
               accept="image/*"
               onChange={(e) => setCover(e.target.files?.[0] || null)}
+              className="w-full p-2 border rounded"
+              required
             />
+            {cover && (
+              <p className="text-xs text-green-600 mt-1">✓ {cover.name}</p>
+            )}
           </div>
 
-          {/* Contenido */}
+          {/* Logo Image */}
+          <div>
+            <label className="block text-sm font-semibold mb-1">Logo Image *</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setLogo(e.target.files?.[0] || null)}
+              className="w-full p-2 border rounded"
+              required
+            />
+            {logo && (
+              <p className="text-xs text-green-600 mt-1">✓ {logo.name}</p>
+            )}
+          </div>
+
+          {/* Content Editor */}
           <div className="space-y-2">
-            <h2 className="text-xl font-semibold">Contenido</h2>
+            <h2 className="text-xl font-semibold">Tutorial Content</h2>
+            <p className="text-sm text-gray-600">
+              Note: H1 headers are not allowed. Use H2 (##) or lower.
+            </p>
             <button
               type="button"
-              className="px-3 py-1 border rounded text-sm"
+              className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
               onClick={() => fileInputRef.current?.click()}
             >
-              Insert Image
+              📷 Insert Image
             </button>
             <input
               ref={fileInputRef}
@@ -213,19 +457,30 @@ ${content}`.trim();
             <div data-color-mode="light">
               <MDEditor
                 value={content}
-                onChange={(val) => setContent(val || "")}
-                height={300}
+                onChange={handleContentChange}
+                height={400}
                 preview="live"
-                commands={mdCommands}
+                commands={finalCommands}
+                textareaProps={{
+                  placeholder:
+                    "Write your tutorial content here...\n\n## Section Title\n\nYour content...",
+                }}
               />
             </div>
+
+            {contentImages.length > 0 && (
+              <p className="text-xs text-gray-600">
+                📎 {contentImages.length} image(s) attached
+              </p>
+            )}
           </div>
 
+          {/* Submit Button */}
           <button
             type="submit"
-            className="w-full p-3 bg-orange-600 rounded text-white font-semibold hover:bg-orange-700"
+            className="w-full p-3 bg-orange-600 rounded text-white font-semibold hover:bg-orange-700 transition"
           >
-            Send
+            Submit Tutorial
           </button>
         </div>
       </div>

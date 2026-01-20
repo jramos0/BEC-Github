@@ -23,7 +23,7 @@ function decryptToken(text: string): string {
 }
 
 //Identifica el tipo de recurso
-export default function resourceIdentifier(data: any, image: any, imageSet?: any[]) {
+export default function resourceIdentifier(data: any, image: any, imageSet?: any[], logo?: any) {
     const resourceCategory = data.resourceCategory;
     switch (resourceCategory) {
         case "Events":
@@ -39,8 +39,8 @@ export default function resourceIdentifier(data: any, image: any, imageSet?: any
             parseProjects(data, image);
             break;
         case "Tutorial":
-            if(imageSet) {    
-                parseTutorials(data, image, imageSet);
+            if(imageSet) {
+                parseTutorials(data, image, imageSet, logo);
             }
             break;
         default:
@@ -236,8 +236,26 @@ async function parseProjects(data: resourceInterfaces.ProjectData, image: any): 
 }
 
 //Parsing para la categoría Tutorial
-async function parseTutorials(data: resourceInterfaces.TutorialData, image: any, imageSet: any[]): Promise<void> {
+async function parseTutorials(data: resourceInterfaces.TutorialData, image: any, imageSet: any[], logo?: any): Promise<void> {
     try{
+        // Create tutorial YAML data with metadata
+        // Remove parent category prefix from subcategory to get the category value for yml
+        // e.g., "node-lightning-network" → "lightning-network"
+        // e.g., "wallet-desktop" → "desktop"
+        const categoryForYml = data.subcategory.replace(`${data.category}-`, '');
+
+        const tutorialData = {
+            id: data.id,
+            title: data.title,
+            description: data.description,
+            category: categoryForYml,
+            level: data.level,
+            language: data.language,
+            tags: (data.tags || []).filter((tag: string) => tag && tag.trim() !== ""),
+            ...(data.author && { author: data.author }),
+            contributor_id: data.githubUser,
+        };
+
         const parentPath = await dirManager.createFolder(data.title);
         const childPath = await dirManager.createChildFolder(parentPath);
         const subChildPath = childPath + `/${data.language}`;
@@ -249,10 +267,20 @@ async function parseTutorials(data: resourceInterfaces.TutorialData, image: any,
             return ;
         }
 
+        // Write tutorial.yml file
+        const yamlData = yaml.stringify(tutorialData);
+        await fs.writeFile(`${parentPath}/tutorial.yml`, yamlData, 'utf8');
+        console.log(`Archivo YAML creado exitosamente en: ${parentPath}/tutorial.yml`);
+
+        // Write markdown file
         await fs.writeFile(`${parentPath}/${data.language}.md`, data.markdown, 'utf8');
         console.log(`Archivo MD creado exitosamente en: ${parentPath}/${data.language}.md`);
 
+        // Process images: cover, logo, and content images
         await imageManager.singleImage(image, childPath, "cover");
+        if (logo) {
+            await imageManager.singleImage(logo, childPath, "logo");
+        }
         await imageManager.imageSet(imageSet, subChildPath);
 
         const remote = await remotePath(data);

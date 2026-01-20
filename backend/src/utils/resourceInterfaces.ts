@@ -82,11 +82,18 @@ export interface ProjectData {
 
 export interface TutorialData {
     resourceCategory: string;
-    category: string;
+    id: string;
+    category: string;           // Parent category for folder structure
+    subcategory: string;        // User-selected subcategory
     title: string;
-    language: String,
-    markdown: String;
+    description: string;
+    language: string;
+    level: string;
+    tags: string[];
+    author: string;
+    markdown: string;
     cover: File | null;
+    logo: File | null;
     githubUser: string;
     githubToken: string;
 }

@@ -47,13 +47,14 @@ app.post("/", upload.single("thumbnail"), async (req, res)=>{
   }
 });
 
-app.post("/upload-tutorial", upload.fields([{name: 'thumbnail'}, {name: 'stepsImages'}]), async (req, res)=>{
+app.post("/upload-tutorial", upload.fields([{name: 'thumbnail'}, {name: 'logo'}, {name: 'stepsImages'}]), async (req, res)=>{
   try{
-    console.log("Data received: ", req.body);    
+    console.log("Data received: ", req.body);
     const files = req.files as { [key: string]: Express.Multer.File[] };
     const thumbnail = files?.["thumbnail"]?.[0];
+    const logo = files?.["logo"]?.[0];
     const stepsImages = files?.["stepsImages"] || []
-    const prResponse = await resourceParser(req.body, thumbnail, stepsImages);
+    const prResponse = await resourceParser(req.body, thumbnail, stepsImages, logo);
     res.status(200).send();
   } catch(error){
     console.error("Error receiving data: ", error);

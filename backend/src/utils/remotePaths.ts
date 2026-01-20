@@ -17,7 +17,15 @@ export default async function getRemotePath(data: any): Promise <string | undefi
             remotePath = "resources/projects/";
             break;
         case "Tutorial":
-            remotePath = "tutorials/"
+            // Use category for folder structure: tutorials/{category}/
+            if (data.category) {
+                remotePath = `tutorials/${data.category}/`;
+                console.log(`Tutorial category-based path: ${remotePath}`);
+            } else {
+                // Fallback to root tutorials folder if no category
+                remotePath = "tutorials/";
+                console.warn("Tutorial submitted without category, using root path");
+            }
             break;
         default:
             console.error("Error retrieving remote path.")
