@@ -37,6 +37,17 @@ const TutorialForm: React.FC = () => {
   const [contentImages, setContentImages] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // ─── Quote Modal State ───────────────────────────────────────────────
+  // Tracks modal visibility, quote text, reference note, and cursor position
+  // Trigger source distinguishes between @@quote typing and toolbar button click
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+  const [quoteText, setQuoteText] = useState("");
+  const [referenceNote, setReferenceNote] = useState("");
+  const [savedCursorPosition, setSavedCursorPosition] = useState(0);
+  const [contentBeforeTrigger, setContentBeforeTrigger] = useState("");
+  const [quoteTriggerSource, setQuoteTriggerSource] = useState<"typing" | "toolbar">("toolbar");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   // ─── Validation ──────────────────────────────────────────────────────
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
 
@@ -70,7 +81,26 @@ const TutorialForm: React.FC = () => {
     },
   };
 
-  const finalCommands = [...customCommands, imageCommand];
+  // Custom quote command that triggers the confirmation modal
+  // Uses ❝ symbol and opens modal at current cursor position
+  const quoteConfirmCommand = {
+    name: "quote-confirmation",
+    keyCommand: "quoteConfirm",
+    buttonProps: { "aria-label": "Insert quote with confirmation" },
+    icon: (
+      <span style={{ fontSize: "16px", fontWeight: "bold" }}>❝</span>
+    ),
+    execute: () => {
+      // Save current cursor position for toolbar trigger
+      const cursorPos = textareaRef.current?.selectionStart || content.length;
+      setContentBeforeTrigger(content);
+      setSavedCursorPosition(cursorPos);
+      setQuoteTriggerSource("toolbar");
+      setQuoteModalOpen(true);
+    },
+  };
+
+  const finalCommands = [...customCommands, imageCommand, quoteConfirmCommand];
 
   // ─── Validation Functions ────────────────────────────────────────────
   const validateContent = (contentValue: string): ValidationError[] => {
@@ -167,6 +197,27 @@ const TutorialForm: React.FC = () => {
       return;
     }
 
+    // @@quote trigger detection: intercept before it reaches final content
+    // Using unique token @@quote (never appears in final markdown) to avoid
+    // conflicts with standard markdown blockquote syntax (>)
+    if (val.includes("@@quote")) {
+      // Find the position where @@quote starts
+      const quoteIndex = val.indexOf("@@quote");
+
+      // Save state before trigger for cancellation restoration
+      setContentBeforeTrigger(content); // Previous content state (without @@quote)
+      setSavedCursorPosition(quoteIndex); // Where @@quote started
+      setQuoteTriggerSource("typing");
+
+      // Remove @@quote from content immediately (never persisted)
+      const cleanedContent = val.replace("@@quote", "");
+      setContent(cleanedContent);
+
+      // Open modal for user confirmation
+      setQuoteModalOpen(true);
+      return;
+    }
+
     // Auto-format: Remove excessive empty lines (keep max 2 newlines = 1 empty line)
     const formatted = val.replace(/\n{3,}/g, "\n\n");
 
@@ -175,6 +226,66 @@ const TutorialForm: React.FC = () => {
     // Real-time validation
     const errors = validateContent(formatted);
     setValidationErrors(errors);
+  };
+
+  // ─── Quote Modal Handlers ────────────────────────────────────────────
+  const handleQuoteConfirm = () => {
+    if (!quoteText.trim()) {
+      alert("Quote text is required");
+      return;
+    }
+
+    // Generate blockquote markdown in the format:
+    // > "Quote text"
+    // >
+    // > — reference note (optional line, omitted if empty)
+    let blockquote = `> "${quoteText.trim()}"`;
+    if (referenceNote.trim()) {
+      blockquote += `\n>\n> — ${referenceNote.trim()}`;
+    }
+
+    // Insert at saved cursor position
+    const before = content.substring(0, savedCursorPosition);
+    const after = content.substring(savedCursorPosition);
+    const newContent = before + blockquote + after;
+
+    setContent(newContent);
+
+    // Reset modal state
+    setQuoteModalOpen(false);
+    setQuoteText("");
+    setReferenceNote("");
+
+    // Position cursor after the inserted blockquote
+    // Using setTimeout to ensure DOM has updated before setting cursor
+    setTimeout(() => {
+      if (textareaRef.current) {
+        const newCursorPos = savedCursorPosition + blockquote.length;
+        textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+        textareaRef.current.focus();
+      }
+    }, 0);
+  };
+
+  const handleQuoteCancel = () => {
+    // Restore content to state before trigger (only for typing trigger)
+    // Toolbar trigger doesn't modify content, so restoration is no-op
+    if (quoteTriggerSource === "typing") {
+      setContent(contentBeforeTrigger);
+    }
+
+    // Reset modal state
+    setQuoteModalOpen(false);
+    setQuoteText("");
+    setReferenceNote("");
+
+    // Restore cursor position
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.setSelectionRange(savedCursorPosition, savedCursorPosition);
+        textareaRef.current.focus();
+      }
+    }, 0);
   };
 
   // ─── Markdown + frontmatter ─────────────────────────────────────────
@@ -484,6 +595,64 @@ ${content}`.trim();
           </button>
         </div>
       </div>
+
+      {/* Quote Confirmation Modal */}
+      {quoteModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-2">Confirm Quote / Mention</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Confirm that this sentence was already mentioned in the previous paragraph.
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Quote Text <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={3}
+                  placeholder="Enter the quote text..."
+                  value={quoteText}
+                  onChange={(e) => setQuoteText(e.target.value)}
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Optional Reference Note
+                </label>
+                <input
+                  type="text"
+                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder='e.g., "as mentioned above"'
+                  value={referenceNote}
+                  onChange={(e) => setReferenceNote(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                type="button"
+                className="flex-1 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 font-medium transition"
+                onClick={handleQuoteCancel}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium transition"
+                onClick={handleQuoteConfirm}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 };

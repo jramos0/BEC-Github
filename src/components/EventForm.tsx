@@ -39,7 +39,14 @@ const EventForm = () => {
   const eventTypes = ["conference", "exam", "meetup", "lecture", "workshop"];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    // Clean description field: remove \r characters
+    const cleanedValue = name === 'description'
+      ? value.replace(/\r\n/g, '\n').replace(/\r/g, '')
+      : value;
+
+    setFormData({ ...formData, [name]: cleanedValue });
   };
 
   const handleTagChange = (index: number, value: string) => {
@@ -88,19 +95,48 @@ const EventForm = () => {
     const githubUser = localStorage.getItem('username');
     const githubToken = localStorage.getItem('accessToken');
 
-    const finalData = {
-      ...formData,
-      start_date: utcStart,
-      end_date: utcEnd,
-      timezone,
-      githubUser,
-      githubToken,
-    };
+    // Format description: remove all \r characters and format as YAML block scalar
+    const cleanDescription = formData.description
+      .replace(/\r\n/g, '\n')  // Replace Windows line breaks
+      .replace(/\r/g, '')       // Remove any remaining \r
+      .trim();
 
-    console.log(finalData);
+    const yamlDescription = cleanDescription
+      ? `|\n  ${cleanDescription.split('\n').join('\n  ')}`
+      : '';
+
+    // Filter out empty tags
+    const filteredTags = formData.tags.filter(tag => tag.trim() !== '');
+
+    // Create FormData object
+    const formPayload = new FormData();
+    formPayload.append('resourceCategory', formData.resourceCategory);
+    formPayload.append('id', formData.id);
+    formPayload.append('start_date', utcStart);
+    formPayload.append('end_date', utcEnd);
+    formPayload.append('timezone', timezone);
+    formPayload.append('address_city_country', formData.address_city_country);
+    formPayload.append('name', formData.name);
+    formPayload.append('type', formData.type);
+    formPayload.append('description', yamlDescription);
+    formPayload.append('language1', formData.language1);
+    formPayload.append('language2', formData.language2);
+    formPayload.append('website', formData.website);
+
+    // Append filtered tags
+    filteredTags.forEach((tag, i) => formPayload.append(`tags[${i}]`, tag));
+
+    if (formData.thumbnail) {
+      formPayload.append('thumbnail', formData.thumbnail);
+    }
+
+    if (githubUser) formPayload.append('githubUser', githubUser);
+    if (githubToken) formPayload.append('githubToken', githubToken);
+
+    console.log('Form data being sent:', Object.fromEntries(formPayload.entries()));
 
     try {
-      await axios.post("http://localhost:4000/", finalData, {
+      await axios.post("http://localhost:4000/", formPayload, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
