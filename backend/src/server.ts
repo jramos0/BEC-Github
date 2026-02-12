@@ -23,6 +23,39 @@ app.use(cors({
 
 app.use(express.json());
 
+function normalizeIndexedArrays(body: Record<string, any>): Record<string, any> {
+  const normalized: Record<string, any> = { ...body };
+  const arrayBuckets: Record<string, any[]> = {};
+
+  for (const [key, value] of Object.entries(body)) {
+    const match = key.match(/^([a-zA-Z0-9_]+)\[(\d+)\]$/);
+    if (!match) continue;
+
+    const [, field, indexStr] = match;
+    const index = Number(indexStr);
+
+    if (!arrayBuckets[field]) arrayBuckets[field] = [];
+    arrayBuckets[field][index] = value;
+    delete normalized[key];
+  }
+
+  for (const [field, values] of Object.entries(arrayBuckets)) {
+    normalized[field] = values.filter((item) => item !== undefined);
+  }
+
+  if (typeof normalized.tags === "string") {
+    normalized.tags = [normalized.tags];
+  }
+  if (typeof normalized.language === "string") {
+    normalized.language = [normalized.language];
+  }
+  if (normalized.language1 || normalized.language2) {
+    normalized.language = [normalized.language1, normalized.language2].filter(Boolean);
+  }
+
+  return normalized;
+}
+
 function decryptToken(text: string): string {
   const parts = text.split(':');
   const iv = Buffer.from(parts.shift() as string, 'hex');
@@ -38,38 +71,52 @@ const upload = multer({ storage });
 
 app.post("/", upload.single("thumbnail"), async (req, res)=>{
   try{
-  console.log("📨 Data received: ", req.body);
-  await resourceParser(req.body, req.file);;
-  res.status(200).send();
+  const normalizedBody = normalizeIndexedArrays(req.body);
+  console.log("📨 Data received: ", normalizedBody);
+  const parserResult = await resourceParser(normalizedBody, req.file);
+  res.status(200).json({
+    message: "Resource processed successfully",
+    ...(parserResult?.prUrl && { prUrl: parserResult.prUrl }),
+  });
   } catch(error){
     console.error("Error receiving data: ", error);
-    res.status(500).send(res.json);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
+    });
   }
 });
 
 app.post("/upload-tutorial", upload.fields([{name: 'thumbnail'}, {name: 'logo'}, {name: 'stepsImages'}]), async (req, res)=>{
   try{
-    console.log("Data received: ", req.body);
+    const normalizedBody = normalizeIndexedArrays(req.body);
+    console.log("Data received: ", normalizedBody);
     const files = req.files as { [key: string]: Express.Multer.File[] };
     const thumbnail = files?.["thumbnail"]?.[0];
     const logo = files?.["logo"]?.[0];
     const stepsImages = files?.["stepsImages"] || []
-    const prResponse = await resourceParser(req.body, thumbnail, stepsImages, logo);
-    res.status(200).send();
+    const parserResult = await resourceParser(normalizedBody, thumbnail, stepsImages, logo);
+    res.status(200).json({
+      message: "Tutorial processed successfully",
+      ...(parserResult?.prUrl && { prUrl: parserResult.prUrl }),
+    });
   } catch(error){
     console.error("Error receiving data: ", error);
-    res.status(500).send(res.json);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
+    });
   }
 });
 
 app.post("/edit-resource", async (req, res) => {
   try{  
     console.log("📨 Data received for edit: ", req.body);
-    editedResourceParser(req.body);
-    res.status(200).send();
+    await editedResourceParser(req.body);
+    res.status(200).json({ message: "Resource edited successfully" });
   }catch(error){
     console.error("Error receiving data: ", error);
-    res.status(500).send(res.json);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
+    });
   }
 });
 

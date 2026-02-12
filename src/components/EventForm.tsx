@@ -3,7 +3,6 @@ import { v4 as uuidv4 } from "uuid";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import moment from "moment-timezone";
-import { useNavigate } from "react-router-dom";
 const apiKey = import.meta.env.VITE_TIMEZONEDB_KEY;
 import axios from "axios";
 import { supportedLanguages } from "../constants/languages";
@@ -16,7 +15,6 @@ function convertToUTCFromZone(date: Date, timezone: string): string {
 }
 
 const EventForm = () => {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     resourceCategory: "Events",
     id: uuidv4(),
@@ -35,6 +33,9 @@ const EventForm = () => {
     githubToken: "",
     thumbnail: null as File | null,
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [createdPrUrl, setCreatedPrUrl] = useState("");
 
   const eventTypes = ["conference", "exam", "meetup", "lecture", "workshop"];
 
@@ -57,6 +58,18 @@ const EventForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSuccessMessage("");
+    setCreatedPrUrl("");
+
+    if (!formData.thumbnail) {
+      alert("Thumbnail is required.");
+      return;
+    }
+
+    if (formData.start_date >= formData.end_date) {
+      alert("Start date must be earlier than end date.");
+      return;
+    }
 
     let timezone = moment.tz.guess();
     const locationQuery = encodeURIComponent(formData.address_city_country);
@@ -101,10 +114,6 @@ const EventForm = () => {
       .replace(/\r/g, '')       // Remove any remaining \r
       .trim();
 
-    const yamlDescription = cleanDescription
-      ? `|\n  ${cleanDescription.split('\n').join('\n  ')}`
-      : '';
-
     // Filter out empty tags
     const filteredTags = formData.tags.filter(tag => tag.trim() !== '');
 
@@ -118,7 +127,7 @@ const EventForm = () => {
     formPayload.append('address_city_country', formData.address_city_country);
     formPayload.append('name', formData.name);
     formPayload.append('type', formData.type);
-    formPayload.append('description', yamlDescription);
+    formPayload.append('description', cleanDescription);
     formPayload.append('language1', formData.language1);
     formPayload.append('language2', formData.language2);
     formPayload.append('website', formData.website);
@@ -135,16 +144,22 @@ const EventForm = () => {
 
     console.log('Form data being sent:', Object.fromEntries(formPayload.entries()));
 
+    setIsSubmitting(true);
     try {
-      await axios.post("http://localhost:4000/", formPayload, {
+      const response = await axios.post("http://localhost:4000/", formPayload, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-
-      navigate("/");
+      setSuccessMessage("✅ PR Created Successfully");
+      if (response?.data?.prUrl) {
+        setCreatedPrUrl(response.data.prUrl);
+      }
     } catch (error) {
       console.error("Error sending data: ", error);
+      alert("Error creating the event PR. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -216,7 +231,31 @@ const EventForm = () => {
       </div>
       <label className="text-xs text-gray-400"> * Select at least two tags.</label>
 
-      <button type="submit" className="p-3 bg-orange-600 rounded text-white font-semibold hover:bg-blue-700 transition">Send</button>
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="p-3 bg-orange-600 rounded text-white font-semibold hover:bg-blue-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        {isSubmitting ? "Sending..." : "Send"}
+      </button>
+      {successMessage && (
+        <div className="text-green-400 text-sm">
+          {successMessage}
+          {createdPrUrl && (
+            <>
+              {" "}
+              <a
+                href={createdPrUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="underline text-green-300"
+              >
+                View PR
+              </a>
+            </>
+          )}
+        </div>
+      )}
     </form>
   );
 };

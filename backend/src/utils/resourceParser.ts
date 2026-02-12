@@ -1,4 +1,4 @@
-import yaml from "yaml";
+import yaml, { Scalar } from "yaml";
 import fs from "node:fs/promises";
 import * as dirManager from "./dirManager.ts";
 import * as imageManager from "./imageManager.ts";
@@ -23,26 +23,22 @@ function decryptToken(text: string): string {
 }
 
 //Identifica el tipo de recurso
-export default function resourceIdentifier(data: any, image: any, imageSet?: any[], logo?: any) {
+export default async function resourceIdentifier(data: any, image: any, imageSet?: any[], logo?: any) {
     const resourceCategory = data.resourceCategory;
     switch (resourceCategory) {
         case "Events":
-            parseEvents(data, image);
-            break;
+            return await parseEvents(data, image);
         case "Newsletter":
-            parseNewsletter(data, image);
-            break;
+            return await parseNewsletter(data, image);
         case "Professor":
-            parseProfessor(data, image);
-            break;
+            return await parseProfessor(data, image);
         case "Project":
-            parseProjects(data, image);
-            break;
+            return await parseProjects(data, image);
         case "Tutorial":
             if(imageSet) {
-                parseTutorials(data, image, imageSet, logo);
+                return await parseTutorials(data, image, imageSet, logo);
             }
-            break;
+            return;
         default:
             console.log("Resource type not valid");
     }
@@ -56,6 +52,14 @@ async function parseEvents(data: resourceInterfaces.EventData, image: any): Prom
 
     try {
         const languages = [data.language1, data.language2].filter(Boolean);
+        const rawDescription = (data.description || "").replace(/\r/g, "");
+        // Backward compatibility with previous frontend payload format: "|\n  line..."
+        const normalizedDescription = rawDescription.startsWith("|\n")
+            ? rawDescription.slice(2).replace(/^  /gm, "")
+            : rawDescription;
+        const clippedDescription = normalizedDescription.trim() + "\n";
+        const descriptionBlock = new Scalar(clippedDescription);
+        descriptionBlock.type = "BLOCK_LITERAL";
 
         const eventData = {
             id: data.id,
@@ -65,7 +69,7 @@ async function parseEvents(data: resourceInterfaces.EventData, image: any): Prom
             address_city_country: data.address_city_country,
             name: data.name,
             type: data.type,
-            description: data.description,
+            description: descriptionBlock,
             language: languages,
             links: {
                 website: data.website
@@ -76,7 +80,10 @@ async function parseEvents(data: resourceInterfaces.EventData, image: any): Prom
 
         const parentPath = await dirManager.createFolder(data.name);
         const childPath = await dirManager.createChildFolder(parentPath);
-        const yamlData = yaml.stringify(eventData);
+        const yamlData = yaml.stringify(eventData, {
+            lineWidth: -1,
+            defaultStringType: "PLAIN",
+        });
 
         await fs.writeFile(`${parentPath}/event.yml`, yamlData, 'utf8');
         console.log(`Archivo YAML creado exitosamente en: ${parentPath}/event.yml`);
@@ -90,15 +97,17 @@ async function parseEvents(data: resourceInterfaces.EventData, image: any): Prom
         const branchData = {OWNER: data.githubUser, TOKEN: decryptedToken, branchName: branchName};
         const commitData = {OWNER: data.githubUser, TOKEN: decryptedToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.name, category: data.resourceCategory, addOrMod: "Adding"};
     
-        await PRManagement.createPR(branchData, commitData);
+        const prResult = await PRManagement.createPR(branchData, commitData);
 
         await dirManager.deleteFolder(parentPath);
+        return prResult;
     } catch (error) {
         console.error("Error processing data: ", error);
+        throw error;
     }
 }
 //Parsing para la categoría Newsletter
-async function parseNewsletter(data: resourceInterfaces.NewsletterData, image: any): Promise<void> {
+async function parseNewsletter(data: resourceInterfaces.NewsletterData, image: any): Promise<any> {
     const formatDate = (dateStr: string) => {
         return format(new Date(dateStr), "yyyy-MM-dd HH:mm:ss");
     };
@@ -135,16 +144,18 @@ async function parseNewsletter(data: resourceInterfaces.NewsletterData, image: a
         const branchData = {OWNER: data.githubUser, TOKEN: decryptedToken, branchName: branchName};
         const commitData = {OWNER: data.githubUser, TOKEN: decryptedToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.title, category: data.resourceCategory, addOrMod: "Adding"};
     
-        await PRManagement.createPR(branchData, commitData);
+        const prResult = await PRManagement.createPR(branchData, commitData);
 
         await dirManager.deleteFolder(parentPath);
+        return prResult;
     }catch(error){
         console.error("Error processing data: ", error);
+        throw error;
     }
 }
 
 //Parsing para la categoría Professors
-async function parseProfessor(data: resourceInterfaces.ProfessorData, image: any): Promise<void> {
+async function parseProfessor(data: resourceInterfaces.ProfessorData, image: any): Promise<any> {
     const formatDate = (dateStr: string) => {
         return format(new Date(dateStr), "yyyy-MM-dd HH:mm:ss");
     };
@@ -184,16 +195,18 @@ async function parseProfessor(data: resourceInterfaces.ProfessorData, image: any
         const branchData = {OWNER: data.githubUser, TOKEN: decryptedToken, branchName: branchName};
         const commitData = {OWNER: data.githubUser, TOKEN: decryptedToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.name, category: data.resourceCategory, addOrMod: "Adding"};
     
-        await PRManagement.createPR(branchData, commitData);
+        const prResult = await PRManagement.createPR(branchData, commitData);
         
         await dirManager.deleteFolder(parentPath);
+        return prResult;
     }catch(error){
         console.error("Error processing data: ", error);
+        throw error;
     }
 }
 
 //Parsing para la categoría Projects
-async function parseProjects(data: resourceInterfaces.ProjectData, image: any): Promise<void> {
+async function parseProjects(data: resourceInterfaces.ProjectData, image: any): Promise<any> {
     try{
         const links = [data["links.website"], data["links.twitter"], data["links.github"], data["links.nostr"]].filter(Boolean);
         const projectData = {
@@ -227,16 +240,18 @@ async function parseProjects(data: resourceInterfaces.ProjectData, image: any): 
         const branchData = {OWNER: data.githubUser, TOKEN: decryptedToken, branchName: branchName};
         const commitData = {OWNER: data.githubUser, TOKEN: decryptedToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.name, category: data.resourceCategory, addOrMod: "Adding"};
 
-        await PRManagement.createPR(branchData, commitData);
+        const prResult = await PRManagement.createPR(branchData, commitData);
 
         await dirManager.deleteFolder(parentPath);
+        return prResult;
     } catch(error){
         console.error("Error processing data: ", error);
+        throw error;
     }
 }
 
 //Parsing para la categoría Tutorial
-async function parseTutorials(data: resourceInterfaces.TutorialData, image: any, imageSet: any[], logo?: any): Promise<void> {
+async function parseTutorials(data: resourceInterfaces.TutorialData, image: any, imageSet: any[], logo?: any): Promise<any> {
     try{
         // Create tutorial YAML data with metadata
         // Remove parent category prefix from subcategory to get the category value for yml
@@ -290,10 +305,12 @@ async function parseTutorials(data: resourceInterfaces.TutorialData, image: any,
         const branchData = {OWNER: data.githubUser, TOKEN: decryptedToken, branchName: branchName};
         const commitData = {OWNER: data.githubUser, TOKEN: decryptedToken, branchName: branchName, folderPath: parentPath, remotePath: remote, resourceName: data.title, category: data.resourceCategory, addOrMod: "Adding"};
 
-        await PRManagement.createPR(branchData, commitData);
+        const prResult = await PRManagement.createPR(branchData, commitData);
 
         await dirManager.deleteFolder(parentPath);
+        return prResult;
     } catch(error) {
         console.error("Error processing data: ", error);
+        throw error;
     }
 }
