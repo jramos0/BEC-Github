@@ -6,9 +6,10 @@ import { useNavigate } from "react-router-dom";
 import "@uiw/react-md-editor/markdown-editor.css";
 import "@uiw/react-markdown-preview/markdown.css";
 import { tutorialSubcategories, getParentCategory } from "../constants/tutorialCategories";
+import { supportedLanguages } from "../constants/languages";
+import { supportedTags } from "../constants/tags";
 import { v4 as uuidv4 } from "uuid";
 
-const languages = { es: "Español", en: "English", fr: "Français", de: "Deutsch" };
 const levels = ["Beginner", "Intermediate", "Advanced"];
 
 // Validation error interface
@@ -27,7 +28,7 @@ const TutorialForm: React.FC = () => {
   const [subcategory, setSubcategory] = useState(""); // User selects subcategory
   const [language, setLanguage] = useState("");
   const [level, setLevel] = useState("Beginner");
-  const [tags, setTags] = useState<string[]>([]);
+  const [tags, setTags] = useState<string[]>(["", "", ""]);
   const [author, setAuthor] = useState("");
   const [cover, setCover] = useState<File | null>(null);
   const [logo, setLogo] = useState<File | null>(null);
@@ -127,6 +128,7 @@ const TutorialForm: React.FC = () => {
 
   const validateForm = (): boolean => {
     const errors: ValidationError[] = [];
+    const selectedTags = tags.filter((tag) => tag.trim() !== "");
 
     if (!title.trim()) {
       errors.push({ field: "title", message: "Title is required" });
@@ -156,6 +158,14 @@ const TutorialForm: React.FC = () => {
       errors.push({ field: "content", message: "Content cannot be empty" });
     }
 
+    if (selectedTags.length < 2) {
+      errors.push({ field: "tags", message: "Please select at least 2 tags" });
+    }
+
+    if (new Set(selectedTags).size !== selectedTags.length) {
+      errors.push({ field: "tags", message: "Duplicate tags are not allowed" });
+    }
+
     // Add content validation errors
     const contentErrors = validateContent(content);
     errors.push(...contentErrors);
@@ -165,8 +175,11 @@ const TutorialForm: React.FC = () => {
   };
 
   // ─── Tag Handling ────────────────────────────────────────────────────
-  const handleTagChange = (val: string) =>
-    setTags(val.split(",").map((t) => t.trim()).filter(t => t));
+  const handleTagChange = (index: number, value: string) => {
+    const updatedTags = [...tags];
+    updatedTags[index] = value;
+    setTags(updatedTags);
+  };
 
   // ─── Image Upload ────────────────────────────────────────────────────
   const handleContentImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -303,6 +316,7 @@ ${content}`.trim();
   // ─── Submit ──────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const filteredTags = tags.filter((tag) => tag.trim() !== "");
 
     // Validate before submission
     if (!validateForm()) {
@@ -330,7 +344,7 @@ ${content}`.trim();
       description,
       language,
       level,
-      tags,
+      tags: filteredTags,
       author,
       markdown: generateMarkdown(),
       thumbnail: cover,
@@ -469,7 +483,7 @@ ${content}`.trim();
                 <option value="" disabled>
                   Select language
                 </option>
-                {Object.entries(languages).map(([code, name]) => (
+                {Object.entries(supportedLanguages).map(([code, name]) => (
                   <option key={code} value={code}>
                     {name}
                   </option>
@@ -495,12 +509,23 @@ ${content}`.trim();
           {/* Tags & Author */}
           <div>
             <label className="block text-sm font-semibold mb-1">Tags</label>
-            <input
-              className="w-full p-2 border rounded"
-              placeholder="bitcoin, tutorial, beginner (comma separated)"
-              value={tags.join(", ")}
-              onChange={(e) => handleTagChange(e.target.value)}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {tags.map((tag, index) => (
+                <select
+                  key={index}
+                  className="w-full p-2 border rounded"
+                  value={tag}
+                  onChange={(e) => handleTagChange(index, e.target.value)}
+                >
+                  <option value="">Select a tag</option>
+                  {supportedTags.map((supportedTag) => (
+                    <option key={supportedTag} value={supportedTag}>
+                      {supportedTag}
+                    </option>
+                  ))}
+                </select>
+              ))}
+            </div>
           </div>
 
           <div>
