@@ -1,19 +1,20 @@
 // src/components/DashboardView.tsx
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { GitBranch } from "lucide-react";
 
+type PullRequest = {
+  id: number | string;
+  number?: number;
+  title: string;
+  created_at: string;
+  resource_type?: string;
+  state: string;
+  draft: boolean;
+  html_url?: string;
+};
 
 function DashboardView() {
-  const navigate = useNavigate();
-  const [pullRequests, setPullRequests] = useState([{
-    id: "",
-    title: "",
-    created_at: "",
-    resource_type: "",
-    state: "",
-    draft: false as boolean,
-  }]);
+  const [pullRequests, setPullRequests] = useState<PullRequest[]>([]);
 
   const [activeBranches,setActiveBranches] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -152,8 +153,10 @@ function DashboardView() {
   
 
 
-  const handleClick = (id: string) => {
-    navigate(`/dashboard/pr/${id}`); // Aquí se redirigirá a la vista individual del PR
+  const handleClick = (pr: PullRequest) => {
+    const prUrl = pr.html_url || (pr.number ? `https://github.com/${REPO_OWNER}/${REPO_NAME}/pull/${pr.number}` : "");
+    if (!prUrl) return;
+    window.open(prUrl, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -226,7 +229,7 @@ function DashboardView() {
             <li
               key={pr.id}
               className="border border-gray-700 rounded p-4 hover:bg-gray-800 transition cursor-pointer"
-              onClick={() => handleClick(pr.id)}
+              onClick={() => handleClick(pr)}
             >
               <h3 className="text-lg font-semibold">{pr.title}</h3>
               <p className="text-sm text-gray-400">
@@ -245,7 +248,7 @@ function DashboardView() {
             <li
               key={pr.id}
               className="border border-gray-700 rounded p-4 hover:bg-gray-800 transition cursor-pointer"
-              onClick={() => handleClick(pr.id)}
+              onClick={() => handleClick(pr)}
             >
               <h3 className="text-lg font-semibold">{pr.title}</h3>
               <p className="text-sm text-gray-400">
@@ -264,7 +267,7 @@ function DashboardView() {
             <li
               key={pr.id}
               className="border border-gray-700 rounded p-4 hover:bg-gray-800 transition cursor-pointer"
-              onClick={() => handleClick(pr.id)}
+              onClick={() => handleClick(pr)}
             >
               <h3 className="text-lg font-semibold">{pr.title}</h3>
               <p className="text-sm text-gray-400">
