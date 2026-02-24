@@ -190,7 +190,7 @@ function DashboardView() {
                 onClick={deleteBranch}
                 className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded shadow transition-all"
               >
-                Eliminar Rama
+                Delete Branch
               </button>
               <button
               onClick={() => {
@@ -202,7 +202,7 @@ function DashboardView() {
               }}
               className="bg-green-600 text-white py-2 px-7 rounded hover:bg-green-700 transition-colors rounded shadow"
             >
-              Marcar como Ready for Review
+              Mark as Ready for Review
             </button>
             </div>
 
