@@ -1,7 +1,7 @@
 
 const LoadingSpinner = ({ message = "Loading..." }: { message?: string }) => {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 text-white">
+    <div className="flex flex-col items-center justify-center gap-3 text-gray-900 dark:text-white">
       <svg
         className="animate-spin h-6 w-6 text-orange-500"
         xmlns="http://www.w3.org/2000/svg"
@@ -22,7 +22,7 @@ const LoadingSpinner = ({ message = "Loading..." }: { message?: string }) => {
           d="M4 12a8 8 0 018-8v8H4z"
         ></path>
       </svg>
-      <p className="text-sm text-gray-400">{message}</p>
+      <p className="text-sm text-gray-600 dark:text-gray-400">{message}</p>
     </div>
   );
 };

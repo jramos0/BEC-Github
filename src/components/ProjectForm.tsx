@@ -11,6 +11,9 @@ const categories = [
   "Privacy", "Service", "Wallet"
 ];
 
+const inputClass = "p-3 rounded bg-white border border-gray-300 text-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-white";
+const selectClass = "p-3 rounded bg-white border border-gray-300 text-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-white";
+
 const ProjectForm = () => {
   const navigate = useNavigate();
   const [contributorName, setContributorName] = useState<string>("");
@@ -35,12 +38,11 @@ const ProjectForm = () => {
   });
 
   const [enabledLinks, setEnabledLinks] = useState({
-  website: false,
-  twitter: false,
-  github: false,
-  nostr: false,
-});
-
+    website: false,
+    twitter: false,
+    github: false,
+    nostr: false,
+  });
 
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
@@ -113,10 +115,10 @@ const ProjectForm = () => {
 
   return (
     <form className="w-full max-w-6xl mx-auto flex flex-col gap-4 px-4" onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <select
           name="category"
-          className="p-3 rounded bg-gray-800 text-white"
+          className={selectClass + " w-full"}
           value={formData.category}
           onChange={handleChange}
         >
@@ -129,7 +131,7 @@ const ProjectForm = () => {
           name="original_language"
           value={formData.original_language}
           onChange={handleChange}
-          className="p-3 rounded bg-gray-800 text-white w-full"
+          className={selectClass + " w-full"}
         >
           <option value="">Select Language</option>
           {Object.entries(supportedLanguages).map(([code, name]) => (
@@ -144,7 +146,7 @@ const ProjectForm = () => {
         type="text"
         name="name"
         placeholder="Project Name"
-        className="p-3 rounded bg-gray-800 text-white"
+        className={inputClass + " w-full"}
         value={formData.name}
         onChange={handleChange}
       />
@@ -152,115 +154,114 @@ const ProjectForm = () => {
       <textarea
         name="description"
         placeholder="Description"
-        className="p-3 rounded bg-gray-800 text-white"
+        className={inputClass + " w-full"}
         rows={4}
         value={formData.description}
         onChange={handleChange}
       />
 
       <div className="flex flex-row items-center gap-4">
-        <label className="cursor-pointer bg-gray-800 hover:bg-orange-700 text-white text-sm px-5 py-3 rounded-md transition shadow-md w-full text-center">
-        Upload Logo
-        <input
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) setFormData((prev) => ({ ...prev, thumbnail: file }));
-          }}
-        />
-      </label>
-      {formData.thumbnail && (
-        <div className="text-green-500 text-xs text-center">
+        <label className="cursor-pointer bg-gray-200 hover:bg-orange-200 text-gray-800 dark:bg-gray-800 dark:hover:bg-orange-700 dark:text-white text-sm px-5 py-3 rounded-md transition shadow-md w-full text-center">
+          Upload Logo
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) setFormData((prev) => ({ ...prev, thumbnail: file }));
+            }}
+          />
+        </label>
+        {formData.thumbnail && (
+          <div className="text-green-600 dark:text-green-500 text-xs text-center">
             Selected image: '{formData.thumbnail.name}'
-        </div>
-      )}
+          </div>
+        )}
       </div>
-
-<div className="flex flex-col gap-2">
-  <label className="text-sm text-gray-400">Select which links to add</label>
-  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-    {Object.keys(enabledLinks).map((key) => (
-      <label key={key} className="inline-flex items-center text-white space-x-2">
-        <input
-          type="checkbox"
-          checked={enabledLinks[key as keyof typeof enabledLinks]}
-          onChange={() =>
-            setEnabledLinks((prev) => ({
-              ...prev,
-              [key]: !prev[key as keyof typeof enabledLinks],
-            }))
-          }
-          className="form-checkbox h-4 w-4 text-orange-600 rounded border-gray-600 bg-gray-900 focus:ring-0"
-        />
-        <span className="capitalize">{key}</span>
-      </label>
-    ))}
-  </div>
-
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-    {enabledLinks.website && (
-      <input
-        type="text"
-        placeholder="Website URL"
-        className="p-3 rounded bg-gray-800 text-white"
-        value={formData.links.website}
-        onChange={(e) => handleLinkChange("website", e.target.value)}
-      />
-    )}
-    {enabledLinks.twitter && (
-      <input
-        type="text"
-        placeholder="Twitter URL"
-        className="p-3 rounded bg-gray-800 text-white"
-        value={formData.links.twitter}
-        onChange={(e) => handleLinkChange("twitter", e.target.value)}
-      />
-    )}
-    {enabledLinks.github && (
-      <input
-        type="text"
-        placeholder="Github URL"
-        className="p-3 rounded bg-gray-800 text-white"
-        value={formData.links.github}
-        onChange={(e) => handleLinkChange("github", e.target.value)}
-      />
-    )}
-    {enabledLinks.nostr && (
-      <input
-        type="text"
-        placeholder="Nostr URL"
-        className="p-3 rounded bg-gray-800 text-white"
-        value={formData.links.nostr}
-        onChange={(e) => handleLinkChange("nostr", e.target.value)}
-      />
-    )}
-  </div>
-</div>
-
 
       <div className="flex flex-col gap-2">
-      <label className="text-sm text-gray-400">Tags</label>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {formData.tags.map((tag, index) => (
-          <select
-            key={index}
-            className="p-3 rounded bg-gray-800 text-white"
-            value={tag}
-            onChange={(e) => handleTagChange(index, e.target.value)}
-          >
-            <option value= "">Select a tag</option>
-            {supportedTags.map((tag) => (
-              <option key={tag} value={tag}>
-                {tag}
-              </option> 
-            ))}
-          </select>
-        ))}
+        <label className="text-sm text-gray-600 dark:text-gray-400">Select which links to add</label>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          {Object.keys(enabledLinks).map((key) => (
+            <label key={key} className="inline-flex items-center text-gray-900 dark:text-white space-x-2">
+              <input
+                type="checkbox"
+                checked={enabledLinks[key as keyof typeof enabledLinks]}
+                onChange={() =>
+                  setEnabledLinks((prev) => ({
+                    ...prev,
+                    [key]: !prev[key as keyof typeof enabledLinks],
+                  }))
+                }
+                className="form-checkbox h-4 w-4 text-orange-600 rounded border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-900 focus:ring-0"
+              />
+              <span className="capitalize">{key}</span>
+            </label>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+          {enabledLinks.website && (
+            <input
+              type="text"
+              placeholder="Website URL"
+              className={inputClass + " w-full"}
+              value={formData.links.website}
+              onChange={(e) => handleLinkChange("website", e.target.value)}
+            />
+          )}
+          {enabledLinks.twitter && (
+            <input
+              type="text"
+              placeholder="Twitter URL"
+              className={inputClass + " w-full"}
+              value={formData.links.twitter}
+              onChange={(e) => handleLinkChange("twitter", e.target.value)}
+            />
+          )}
+          {enabledLinks.github && (
+            <input
+              type="text"
+              placeholder="Github URL"
+              className={inputClass + " w-full"}
+              value={formData.links.github}
+              onChange={(e) => handleLinkChange("github", e.target.value)}
+            />
+          )}
+          {enabledLinks.nostr && (
+            <input
+              type="text"
+              placeholder="Nostr URL"
+              className={inputClass + " w-full"}
+              value={formData.links.nostr}
+              onChange={(e) => handleLinkChange("nostr", e.target.value)}
+            />
+          )}
+        </div>
       </div>
-      <label className="text-xs text-gray-400"> * Select at least two tags.</label>
-    </div>
+
+      <div className="flex flex-col gap-2">
+        <label className="text-sm text-gray-600 dark:text-gray-400">Tags</label>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {formData.tags.map((tag, index) => (
+            <select
+              key={index}
+              className={selectClass + " w-full"}
+              value={tag}
+              onChange={(e) => handleTagChange(index, e.target.value)}
+            >
+              <option value="">Select a tag</option>
+              {supportedTags.map((tag) => (
+                <option key={tag} value={tag}>
+                  {tag}
+                </option>
+              ))}
+            </select>
+          ))}
+        </div>
+        <label className="text-xs text-gray-500 dark:text-gray-400"> * Select at least two tags.</label>
+      </div>
 
       <button
         type="submit"

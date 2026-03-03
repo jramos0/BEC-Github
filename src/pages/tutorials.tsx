@@ -3,7 +3,7 @@ import TutorialForm from "../components/TutorialForm";
 
 const Tutorials = () => {
   return (
-    <div className="min-h-screen flex flex-col items-center bg-black text-white w-full">
+    <div className="min-h-screen flex flex-col items-center bg-cream dark:bg-black text-gray-900 dark:text-white w-full">
       <div className="mb-8">
         <img src={pbnLogo} alt="Plan B Network Logo" className="h-12 w-auto" />
       </div>

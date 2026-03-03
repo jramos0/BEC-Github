@@ -12,6 +12,8 @@ const SECRET = process.env.GITHUB_CLIENT_SECRET!;
 const UPSTREAM_OWNER = "jramos0";
 const REPO = "bitcoin-educational-content";
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY as string; 
+const PR_COUNT_TTL_MS = 60 * 1000;
+const prCountCache = new Map<string, { total: number; expiresAt: number }>();
 interface Branch {
   name: string;
 }
@@ -546,6 +548,65 @@ router.post('/user-prs', async (req: Request, res: Response):Promise<void> => {
   } catch (e) {
     console.error("Error en /user-prs:", e);
     res.status(500).json({ error: "Error al obtener los PRs del usuario" });
+  }
+});
+
+router.post('/user-prs-count', async (req: Request, res: Response): Promise<void> => {
+  const auth = req.get("Authorization") || "";
+  const match = auth.match(/^Bearer\s+(.+)$/i);
+  if (!match) {
+    res.status(400).json({ error: "Invalid Authorization header format" });
+    return;
+  }
+
+  const encryptedToken = match[1];
+  const { USERNAME, REPO_OWNER, REPO_NAME } = req.body;
+  if (!USERNAME || !REPO_OWNER || !REPO_NAME) {
+    res.status(400).json({ error: "Faltan parámetros requeridos" });
+    return;
+  }
+
+  let token: string;
+  try {
+    token = decryptToken(encryptedToken);
+  } catch {
+    res.status(400).json({ error: "Invalid token" });
+    return;
+  }
+
+  const cacheKey = `${REPO_OWNER}/${REPO_NAME}:${USERNAME}`;
+  const now = Date.now();
+  const cached = prCountCache.get(cacheKey);
+  if (cached && cached.expiresAt > now) {
+    res.json({ total: cached.total });
+    return;
+  }
+
+  try {
+    const query = encodeURIComponent(`repo:${REPO_OWNER}/${REPO_NAME} is:pr author:${USERNAME}`);
+    const ghRes = await fetch(
+      `https://api.github.com/search/issues?q=${query}&per_page=1`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github+json'
+        }
+      }
+    );
+
+    if (!ghRes.ok) {
+      const err = await ghRes.json();
+      res.status(ghRes.status).json({ error: err.message || ghRes.statusText });
+      return;
+    }
+
+    const data = await ghRes.json() as { total_count?: number };
+    const total = typeof data.total_count === "number" ? data.total_count : 0;
+    prCountCache.set(cacheKey, { total, expiresAt: now + PR_COUNT_TTL_MS });
+    res.json({ total });
+  } catch (e) {
+    console.error("Error en /user-prs-count:", e);
+    res.status(500).json({ error: "Error al obtener el total de PRs del usuario" });
   }
 });
 

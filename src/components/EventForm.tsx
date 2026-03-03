@@ -14,6 +14,9 @@ function convertToUTCFromZone(date: Date, timezone: string): string {
   return eventTime.utc().format("YYYY-MM-DD HH:mm:ss");
 }
 
+const inputClass = "p-3 rounded bg-white border border-gray-300 text-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-white w-full";
+const selectClass = "p-3 rounded bg-white border border-gray-300 text-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-white w-full";
+
 const EventForm = () => {
   const [formData, setFormData] = useState({
     resourceCategory: "Events",
@@ -165,71 +168,71 @@ const EventForm = () => {
 
   return (
     <form className="w-full max-w-4xl flex flex-col gap-4" onSubmit={handleSubmit}>
-      <input type="text" name="name" placeholder="Event Name" className="p-3 rounded bg-gray-800 text-white" value={formData.name} onChange={handleChange} />
+      <input type="text" name="name" placeholder="Event Name" className={inputClass} value={formData.name} onChange={handleChange} />
 
       <div className="flex gap-4">
         <div className="w-1/3">
-          <DatePicker selected={formData.start_date} onChange={(date: Date | null) => { if (date) setFormData({ ...formData, start_date: date }); }} showTimeSelect dateFormat="yyyy-MM-dd HH:mm:ss" className="p-3 rounded bg-gray-800 text-white w-full" />
+          <DatePicker selected={formData.start_date} onChange={(date: Date | null) => { if (date) setFormData({ ...formData, start_date: date }); }} showTimeSelect dateFormat="yyyy-MM-dd HH:mm:ss" className={inputClass} />
         </div>
 
         <div className="w-1/3">
-          <DatePicker selected={formData.end_date} onChange={(date: Date | null) => { if (date) setFormData({ ...formData, end_date: date }); }} showTimeSelect dateFormat="yyyy-MM-dd HH:mm:ss" className="p-3 rounded bg-gray-800 text-white w-full" />
+          <DatePicker selected={formData.end_date} onChange={(date: Date | null) => { if (date) setFormData({ ...formData, end_date: date }); }} showTimeSelect dateFormat="yyyy-MM-dd HH:mm:ss" className={inputClass} />
         </div>
 
         <div className="w-1/3 flex items-end">
-          <label title="Upload only horizontal images" className="cursor-pointer bg-gray-800 hover:bg-orange-700 text-white text-sm px-5 py-3 rounded-md transition shadow-md w-full text-center">
+          <label title="Upload only horizontal images" className="cursor-pointer bg-gray-200 hover:bg-orange-200 text-gray-800 dark:bg-gray-800 dark:hover:bg-orange-700 dark:text-white text-sm px-5 py-3 rounded-md transition shadow-md w-full text-center">
             Upload Thumbnail
-            <input type="file" accept="image/*" className="hidden" onChange={(e) => { 
-              const file = e.target.files?.[0]; 
-              if (file) setFormData(prev => ({ ...prev, thumbnail: file })); 
+            <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) setFormData(prev => ({ ...prev, thumbnail: file }));
             }} />
           </label>
         </div>
       </div>
       {formData.thumbnail && (
-        <div className="text-green-500 text-xs text-right px-8">
+        <div className="text-green-600 dark:text-green-500 text-xs text-right px-8">
           Selected image: '{formData.thumbnail.name}'
         </div>
       )}
 
-      <div className="text-xs text-gray-400 text-center">
+      <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
         When choosing a date/time, please ensure it is in the local time of the event location. The system will convert it to the required format automatically.
       </div>
 
       <div className="flex gap-4">
-        <input type="text" name="address_city_country" placeholder="City, Country (e.g., Riga, Latvia)" className="p-3 rounded bg-gray-800 text-white w-full" value={formData.address_city_country} onChange={handleChange} />
+        <input type="text" name="address_city_country" placeholder="City, Country (e.g., Riga, Latvia)" className={inputClass} value={formData.address_city_country} onChange={handleChange} />
 
-        <select name="type" className="p-3 rounded bg-gray-800 text-white w-full" value={formData.type} onChange={handleChange}>
+        <select name="type" className={selectClass} value={formData.type} onChange={handleChange}>
           {eventTypes.map((type) => (<option key={type} value={type}>{type}</option>))}
         </select>
       </div>
 
-      <textarea name="description" placeholder="Description" className="p-3 rounded bg-gray-800 text-white w-full" value={formData.description} onChange={handleChange} />
+      <textarea name="description" placeholder="Description" className={inputClass} value={formData.description} onChange={handleChange} />
 
       <div className="flex gap-4">
-        <input type="text" name="website" placeholder="Website URL" className="p-3 rounded bg-gray-800 text-white flex-1" value={formData.website} onChange={handleChange} />
+        <input type="text" name="website" placeholder="Website URL" className={inputClass} value={formData.website} onChange={handleChange} />
 
-        <select name="language1" value={formData.language1} onChange={handleChange} className="p-3 rounded bg-gray-800 text-white w-full">
+        <select name="language1" value={formData.language1} onChange={handleChange} className={selectClass}>
           <option value="">Select Language</option>
           {Object.entries(supportedLanguages).map(([code, name]) => (<option key={code} value={code}>{name}</option>))}
         </select>
 
-        <select name="language2" value={formData.language2} onChange={handleChange} className="p-3 rounded bg-gray-800 text-white w-full">
+        <select name="language2" value={formData.language2} onChange={handleChange} className={selectClass}>
           <option value="">Select Language</option>
           {Object.entries(supportedLanguages).map(([code, name]) => (<option key={code} value={code}>{name}</option>))}
         </select>
       </div>
-      <label className="text-xs text-gray-400"> * Select at least one language.</label>
+      <label className="text-xs text-gray-500 dark:text-gray-400"> * Select at least one language.</label>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {formData.tags.map((tag, index) => (
-          <select key={index} className="p-3 rounded bg-gray-800 text-white" value={tag} onChange={(e) => handleTagChange(index, e.target.value)}>
+          <select key={index} className={selectClass} value={tag} onChange={(e) => handleTagChange(index, e.target.value)}>
             <option value="">Select a tag</option>
             {supportedTags.map((tag) => (<option key={tag} value={tag}>{tag}</option>))}
           </select>
         ))}
       </div>
-      <label className="text-xs text-gray-400"> * Select at least two tags.</label>
+      <label className="text-xs text-gray-500 dark:text-gray-400"> * Select at least two tags.</label>
 
       <button
         type="submit"
@@ -239,7 +242,7 @@ const EventForm = () => {
         {isSubmitting ? "Sending..." : "Send"}
       </button>
       {successMessage && (
-        <div className="text-green-400 text-sm">
+        <div className="text-green-600 dark:text-green-400 text-sm">
           {successMessage}
           {createdPrUrl && (
             <>
@@ -248,7 +251,7 @@ const EventForm = () => {
                 href={createdPrUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="underline text-green-300"
+                className="underline text-green-700 dark:text-green-300"
               >
                 View PR
               </a>

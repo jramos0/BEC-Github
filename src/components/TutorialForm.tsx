@@ -385,8 +385,8 @@ ${content}`.trim();
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="flex flex-col lg:flex-row gap-6 min-h-screen w-4/5 mx-auto px-6 py-8 bg-gray-100 text-black">
-        <div className="w-full bg-white p-4 rounded space-y-4">
+      <div className="flex flex-col lg:flex-row gap-6 min-h-screen w-4/5 mx-auto px-6 py-8 bg-cream dark:bg-gray-900 text-gray-900 dark:text-white">
+        <div className="w-full bg-white dark:bg-gray-800 p-4 rounded space-y-4">
           <h1 className="text-2xl font-bold">Create Tutorial</h1>
 
           {/* Validation Errors Banner */}
@@ -425,7 +425,7 @@ ${content}`.trim();
           <div>
             <label className="block text-sm font-semibold mb-1">Tutorial Title *</label>
             <input
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="Enter tutorial title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -437,7 +437,7 @@ ${content}`.trim();
           <div>
             <label className="block text-sm font-semibold mb-1">Description *</label>
             <textarea
-              className="w-full p-2 border rounded h-24"
+              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded h-24 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="Brief description of the tutorial"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -449,7 +449,7 @@ ${content}`.trim();
           <div>
             <label className="block text-sm font-semibold mb-1">Subcategory *</label>
             <select
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               value={subcategory}
               onChange={(e) => setSubcategory(e.target.value)}
               required
@@ -464,7 +464,7 @@ ${content}`.trim();
               ))}
             </select>
             {subcategory && (
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Category: {getParentCategory(subcategory)}
               </p>
             )}
@@ -475,7 +475,7 @@ ${content}`.trim();
             <div className="flex-1">
               <label className="block text-sm font-semibold mb-1">Language *</label>
               <select
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
                 required
@@ -493,7 +493,7 @@ ${content}`.trim();
             <div className="flex-1">
               <label className="block text-sm font-semibold mb-1">Difficulty Level</label>
               <select
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 value={level}
                 onChange={(e) => setLevel(e.target.value)}
               >
@@ -513,7 +513,7 @@ ${content}`.trim();
               {tags.map((tag, index) => (
                 <select
                   key={index}
-                  className="w-full p-2 border rounded"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   value={tag}
                   onChange={(e) => handleTagChange(index, e.target.value)}
                 >
@@ -531,7 +531,7 @@ ${content}`.trim();
           <div>
             <label className="block text-sm font-semibold mb-1">Author Name</label>
             <input
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="Your name"
               value={author}
               onChange={(e) => setAuthor(e.target.value)}
@@ -545,7 +545,7 @@ ${content}`.trim();
               type="file"
               accept="image/*"
               onChange={(e) => setCover(e.target.files?.[0] || null)}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               required
             />
             {cover && (
@@ -560,7 +560,7 @@ ${content}`.trim();
               type="file"
               accept="image/*"
               onChange={(e) => setLogo(e.target.files?.[0] || null)}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               required
             />
             {logo && (
@@ -571,7 +571,7 @@ ${content}`.trim();
           {/* Content Editor */}
           <div className="space-y-2">
             <h2 className="text-xl font-semibold">Tutorial Content</h2>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Note: H1 headers are not allowed. Use H2 (##) or lower.
             </p>
             <button
@@ -605,7 +605,7 @@ ${content}`.trim();
             </div>
 
             {contentImages.length > 0 && (
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-gray-600 dark:text-gray-400">
                 📎 {contentImages.length} image(s) attached
               </p>
             )}
@@ -624,9 +624,9 @@ ${content}`.trim();
       {/* Quote Confirmation Modal */}
       {quoteModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4 text-gray-900 dark:text-white">
             <h3 className="text-lg font-semibold mb-2">Confirm Quote / Mention</h3>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               Confirm that this sentence was already mentioned in the previous paragraph.
             </p>
 
@@ -636,7 +636,7 @@ ${content}`.trim();
                   Quote Text <span className="text-red-500">*</span>
                 </label>
                 <textarea
-                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={3}
                   placeholder="Enter the quote text..."
                   value={quoteText}
@@ -651,7 +651,7 @@ ${content}`.trim();
                 </label>
                 <input
                   type="text"
-                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder='e.g., "as mentioned above"'
                   value={referenceNote}
                   onChange={(e) => setReferenceNote(e.target.value)}
@@ -662,7 +662,7 @@ ${content}`.trim();
             <div className="flex gap-3 mt-6">
               <button
                 type="button"
-                className="flex-1 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 font-medium transition"
+                className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded hover:bg-gray-300 dark:hover:bg-gray-600 font-medium transition"
                 onClick={handleQuoteCancel}
               >
                 Cancel

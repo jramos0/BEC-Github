@@ -4,10 +4,13 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { supportedTags } from "../constants/tags";
 
+const inputClass = "p-3 rounded bg-white border border-gray-300 text-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-white w-full";
+const selectClass = "p-3 rounded bg-white border border-gray-300 text-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-white";
+
 const ProfessorForm = () => {
   const navigate = useNavigate();
-  
-    type ProfessorFormData = {
+
+  type ProfessorFormData = {
     resourceCategory: "Professor";
     id: string;
     name: string;
@@ -44,16 +47,12 @@ const ProfessorForm = () => {
     githubToken: "",
   });
 
-  
-  
-
   const [enabledLinks, setEnabledLinks] = useState({
     twitter: false,
     github: false,
     website: false,
     nostr: false,
   });
-  
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -84,7 +83,7 @@ const ProfessorForm = () => {
         ...(enabledLinks.github && { github: formData.github }),
         ...(enabledLinks.website && { website: formData.website }),
         ...(enabledLinks.nostr && { nostr: formData.nostr }),
-      },          
+      },
       tips: {
         lightning_address: formData.lightning_address,
       },
@@ -126,122 +125,112 @@ const ProfessorForm = () => {
   return (
     <form className="w-full max-w-6xl mx-auto flex flex-col gap-4 px-4" onSubmit={handleSubmit}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <input type="text" name="name" placeholder="Professor Name" className="p-3 rounded bg-gray-800 text-white w-full col-span-1 md:col-span-2" value={formData.name} onChange={handleChange} />
+        <input type="text" name="name" placeholder="Professor Name" className={inputClass + " col-span-1 md:col-span-2"} value={formData.name} onChange={handleChange} />
       </div>
 
       <div className="flex flex-col gap-2">
-  <label className="text-sm text-gray-400">Select which links to add</label>
-  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-    {Object.keys(enabledLinks).map((key) => (
-      <label key={key} className="inline-flex items-center text-white space-x-2">
-        <input
-          type="checkbox"
-          checked={enabledLinks[key as keyof typeof enabledLinks]}
-          onChange={() =>
-            setEnabledLinks((prev) => ({
-              ...prev,
-              [key]: !prev[key as keyof typeof enabledLinks],
-            }))
-          }
-          className="form-checkbox h-4 w-4 text-orange-600 rounded border-gray-600 bg-gray-900 focus:ring-0"
-        />
-        <span className="capitalize">{key}</span>
-      </label>
-    ))}
-  </div>
-
-  {/* Campos condicionales */}
-  {enabledLinks.twitter && (
-    <input
-      type="text"
-      name="twitter"
-      placeholder="Twitter Link"
-      className="p-3 rounded bg-gray-800 text-white w-full"
-      value={formData.twitter}
-      onChange={handleChange}
-    />
-  )}
-
-  {enabledLinks.github && (
-    <input
-      type="text"
-      name="github"
-      placeholder="GitHub Link"
-      className="p-3 rounded bg-gray-800 text-white w-full"
-      value={formData.github || ""}
-      onChange={(e) => setFormData({ ...formData, github: e.target.value })}
-    />
-  )}
-
-  {enabledLinks.website && (
-    <input
-      type="text"
-      name="website"
-      placeholder="Website Link"
-      className="p-3 rounded bg-gray-800 text-white w-full"
-      value={formData.website || ""}
-      onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-    />
-  )}
-
-  {enabledLinks.nostr && (
-    <input
-      type="text"
-      name="nostr"
-      placeholder="Nostr pubkey"
-      className="p-3 rounded bg-gray-800 text-white w-full"
-      value={formData.nostr || ""}
-      onChange={(e) => setFormData({ ...formData, nostr: e.target.value })}
-    />
-  )}
-</div>
-    <textarea name="bio" placeholder="Full Bio" className="p-3 rounded bg-gray-800 text-white w-full" rows={4} value={formData.bio} onChange={handleChange} />
-      <input type="text" name="short_bio" placeholder="Short Bio" className="p-3 rounded bg-gray-800 text-white w-full" value={formData.short_bio} onChange={handleChange} />
-      
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <input type="text" name="lightning_address" placeholder="Lightning Address" className="p-3 rounded bg-gray-800 text-white w-full" value={formData.lightning_address} onChange={handleChange} />
-
-        <input type="text" name="company" placeholder="Company" className="p-3 rounded bg-gray-800 text-white w-full" value={formData.company} onChange={handleChange} />
-        </div>
-     
-      {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> */}
-        {/* <div className="flex flex-col gap-2 w-full">
-          <label className="text-sm text-gray-400">Affiliations (UUIDs)</label>
-          {formData.affiliations.map((aff, index) => (
-            <input key={index} type="text" placeholder={`Affiliation ${index + 1}`} className="p-3 rounded bg-gray-800 text-white" value={aff} onChange={(e) => handleArrayChange("affiliations", index, e.target.value)} />
+        <label className="text-sm text-gray-600 dark:text-gray-400">Select which links to add</label>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          {Object.keys(enabledLinks).map((key) => (
+            <label key={key} className="inline-flex items-center text-gray-900 dark:text-white space-x-2">
+              <input
+                type="checkbox"
+                checked={enabledLinks[key as keyof typeof enabledLinks]}
+                onChange={() =>
+                  setEnabledLinks((prev) => ({
+                    ...prev,
+                    [key]: !prev[key as keyof typeof enabledLinks],
+                  }))
+                }
+                className="form-checkbox h-4 w-4 text-orange-600 rounded border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-900 focus:ring-0"
+              />
+              <span className="capitalize">{key}</span>
+            </label>
           ))}
-        </div> */}
-      {/* </div> */}
+        </div>
+
+        {enabledLinks.twitter && (
+          <input
+            type="text"
+            name="twitter"
+            placeholder="Twitter Link"
+            className={inputClass}
+            value={formData.twitter}
+            onChange={handleChange}
+          />
+        )}
+
+        {enabledLinks.github && (
+          <input
+            type="text"
+            name="github"
+            placeholder="GitHub Link"
+            className={inputClass}
+            value={formData.github || ""}
+            onChange={(e) => setFormData({ ...formData, github: e.target.value })}
+          />
+        )}
+
+        {enabledLinks.website && (
+          <input
+            type="text"
+            name="website"
+            placeholder="Website Link"
+            className={inputClass}
+            value={formData.website || ""}
+            onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+          />
+        )}
+
+        {enabledLinks.nostr && (
+          <input
+            type="text"
+            name="nostr"
+            placeholder="Nostr pubkey"
+            className={inputClass}
+            value={formData.nostr || ""}
+            onChange={(e) => setFormData({ ...formData, nostr: e.target.value })}
+          />
+        )}
+      </div>
+
+      <textarea name="bio" placeholder="Full Bio" className={inputClass} rows={4} value={formData.bio} onChange={handleChange} />
+      <input type="text" name="short_bio" placeholder="Short Bio" className={inputClass} value={formData.short_bio} onChange={handleChange} />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <input type="text" name="lightning_address" placeholder="Lightning Address" className={inputClass} value={formData.lightning_address} onChange={handleChange} />
+        <input type="text" name="company" placeholder="Company" className={inputClass} value={formData.company} onChange={handleChange} />
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {formData.tags.map((tag, index) => (
           <select
             key={index}
-            className="p-3 rounded bg-gray-800 text-white"
+            className={selectClass + " w-full"}
             value={tag}
             onChange={(e) => handleArrayChange("tags", index, e.target.value)}
           >
-            <option value= "">Select a tag</option>
+            <option value="">Select a tag</option>
             {supportedTags.map((tag) => (
               <option key={tag} value={tag}>
                 {tag}
-              </option> 
+              </option>
             ))}
-          </select>          
+          </select>
         ))}
       </div>
-      <label className="text-xs text-gray-400"> * Select at least two tags.</label>
+      <label className="text-xs text-gray-500 dark:text-gray-400"> * Select at least two tags.</label>
 
       <div className="flex flex-row items-center w-full gap-4">
-        <label className="cursor-pointer bg-gray-800 hover:bg-orange-700 text-white text-sm rounded-md transition shadow-md w-full text-center mb-1 py-3">
+        <label className="cursor-pointer bg-gray-200 hover:bg-orange-200 text-gray-800 dark:bg-gray-800 dark:hover:bg-orange-700 dark:text-white text-sm rounded-md transition shadow-md w-full text-center mb-1 py-3">
           Upload Profile Picture
           <input type="file" accept="image/*" className="hidden" onChange={(e) => {
             const file = e.target.files?.[0];
-              if (file) setFormData((prev) => ({ ...prev, thumbnail: file }));
-          }}/>
+            if (file) setFormData((prev) => ({ ...prev, thumbnail: file }));
+          }} />
         </label>
         {formData.thumbnail && (
-          <div className="text-green-500 text-xs text-center">
+          <div className="text-green-600 dark:text-green-500 text-xs text-center">
             Selected image: '{formData.thumbnail.name}'
           </div>
         )}

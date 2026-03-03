@@ -19,9 +19,10 @@ function DashboardView() {
   const [activeBranches,setActiveBranches] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [totalPrCount, setTotalPrCount] = useState<number | null>(null);
   const [selectedBranch, setSelectedBranch] = useState<string>('');
   const [deleteMessage, setDeleteMessage] = useState<string>('');
-   const [updateStatus, setUpdateStatus] = useState<string | null>(null);
+  const [updateStatus, setUpdateStatus] = useState<string | null>(null);
 
 
 
@@ -39,21 +40,40 @@ function DashboardView() {
       }
 
       try {
-        const response = await fetch('http://localhost:4000/manage/user-prs', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${TOKEN}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ USERNAME, REPO_OWNER, REPO_NAME }),
-        });
+        const [prsResponse, countResponse] = await Promise.all([
+          fetch('http://localhost:4000/manage/user-prs', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${TOKEN}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ USERNAME, REPO_OWNER, REPO_NAME }),
+          }),
+          fetch('http://localhost:4000/manage/user-prs-count', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${TOKEN}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ USERNAME, REPO_OWNER, REPO_NAME }),
+          })
+        ]);
 
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.error || `Error ${response.status}`);
+        const [prsData, countData] = await Promise.all([
+          prsResponse.json(),
+          countResponse.json()
+        ]);
+
+        if (!prsResponse.ok) {
+          throw new Error(prsData.error || `Error ${prsResponse.status}`);
         }
 
-        setPullRequests(data);
+        if (!countResponse.ok) {
+          throw new Error(countData.error || `Error ${countResponse.status}`);
+        }
+
+        setPullRequests(prsData);
+        setTotalPrCount(typeof countData.total === "number" ? countData.total : prsData.length);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -74,7 +94,7 @@ function DashboardView() {
           if (!response.ok) {
             throw new Error(`Error al obtener ramas: ${response.status}`);
           }
-  
+
           const jsonData: string[] = await response.json();
           setActiveBranches(jsonData);
         } catch (err: unknown) {
@@ -87,16 +107,16 @@ function DashboardView() {
           setLoading(false);
         }
       };
-  
+
       getBranches();
     }, []);
-  
+
     const deleteBranch = async () => {
       if (!selectedBranch) {
         setDeleteMessage('Selecciona una rama para eliminar.');
         return;
       }
-  
+
       try {
         const response = await fetch("http://localhost:4000/manage/deletebranch", {
           method: 'POST',
@@ -106,11 +126,11 @@ function DashboardView() {
           },
           body: JSON.stringify({ branchName: selectedBranch }),
         });
-  
+
         if (!response.ok) {
           throw new Error(`Error al eliminar la rama: ${response.status}`);
         }
-  
+
         const result = await response.json();
         setDeleteMessage(result.message || 'Rama eliminada correctamente.');
         setActiveBranches(prev => prev.filter(branch => branch !== selectedBranch));
@@ -123,7 +143,7 @@ function DashboardView() {
         }
       }
     };
-  
+
     const markAsReady = async (branchName: string) => {
       try {
         const response = await fetch("http://localhost:4000/manage/updatepr", {
@@ -134,13 +154,13 @@ function DashboardView() {
           },
           body: JSON.stringify({ branchName }),
         });
-  
+
         const data = await response.json();
-  
+
         if (!response.ok) {
           throw new Error(data.error || 'Error desconocido');
         }
-  
+
         setUpdateStatus(data.message || '✅ PR marcado como Ready for Review');
       } catch (err: unknown) {
         if (err instanceof Error) {
@@ -150,7 +170,6 @@ function DashboardView() {
         }
       }
     };
-  
 
 
   const handleClick = (pr: PullRequest) => {
@@ -161,23 +180,23 @@ function DashboardView() {
 
   return (
     <div>
-       <div className="rounded-lg shadow-xl">
+      <div className="rounded-lg shadow-xl">
         <h1 className="text-2xl font-bold mb-4">Select a Branch</h1>
         {loading ? (
-          <p className="text-black-500">Cargando ramas...</p>
+          <p className="text-gray-600 dark:text-gray-400">Cargando ramas...</p>
         ) : error ? (
           <p className="text-red-500">Error: {error}</p>
         ) : (
           <>
-            <div className="bg-gray-900 p-6 rounded-lg flex flex-col md:flex-row items-center justify-between gap-4 mb-10 border border-gray-700">
+            <div className="bg-white dark:bg-gray-900 p-6 rounded-lg flex flex-col md:flex-row items-center justify-between gap-4 mb-10 border border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-3 flex-1 w-full">
                 <GitBranch className="text-orange-400 w-5 h-5 shrink-0 mt-1" />
                 <div className="w-full">
-                  <label className="block text-sm text-gray-400 mb-2">Branch seleccionada</label>
+                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">Branch seleccionada</label>
                   <select
                     value={selectedBranch}
                     onChange={(e) => setSelectedBranch(e.target.value)}
-                    className="w-full bg-black text-white border border-gray-600 px-4 py-2 rounded focus:ring-orange-400 focus:outline-none"
+                    className="w-full bg-cream dark:bg-black text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 px-4 py-2 rounded focus:ring-orange-400 focus:outline-none"
                   >
                     <option value="" disabled>Elegí una rama</option>
                     {activeBranches.map(branch => (
@@ -193,17 +212,17 @@ function DashboardView() {
                 Delete Branch
               </button>
               <button
-              onClick={() => {
-                if (!selectedBranch) {
-                  setUpdateStatus('❌ Selecciona una rama antes de marcar como ready.');
-                  return;
-                }
-                markAsReady(selectedBranch);
-              }}
-              className="bg-green-600 text-white py-2 px-7 rounded hover:bg-green-700 transition-colors rounded shadow"
-            >
-              Mark as Ready for Review
-            </button>
+                onClick={() => {
+                  if (!selectedBranch) {
+                    setUpdateStatus('❌ Selecciona una rama antes de marcar como ready.');
+                    return;
+                  }
+                  markAsReady(selectedBranch);
+                }}
+                className="bg-green-600 text-white py-2 px-7 rounded hover:bg-green-700 transition-colors shadow"
+              >
+                Mark as Ready for Review
+              </button>
             </div>
 
             {(deleteMessage || updateStatus) && (
@@ -217,22 +236,21 @@ function DashboardView() {
               </p>
             )}
           </>
-
         )}
-       </div>
+      </div>
       <h2 className="text-2xl font-bold mb-2">Your Draft Pull Requests</h2>
       {pullRequests.filter(pr=> pr.draft && pr.state == "open").length === 0 ? (
-        <p className="text-gray-400 mb-6">No "draft" PRs found.</p>
+        <p className="text-gray-600 dark:text-gray-400 mb-6">No "draft" PRs found.</p>
       ) : (
         <ul className="space-y-4">
           {pullRequests.filter(pr=> pr.draft && pr.state == "open").map((pr) => (
             <li
               key={pr.id}
-              className="border border-gray-700 rounded p-4 hover:bg-gray-800 transition cursor-pointer"
+              className="border border-gray-200 dark:border-gray-700 rounded p-4 hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer"
               onClick={() => handleClick(pr)}
             >
               <h3 className="text-lg font-semibold">{pr.title}</h3>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Resource: {pr.resource_type} — Created on {pr.created_at}
               </p>
             </li>
@@ -241,36 +259,41 @@ function DashboardView() {
       )}
       <h2 className="text-2xl font-bold mb-2">Your Pull Requests Ready-For-Review</h2>
       {pullRequests.filter(pr => pr.state == "open" && pr.draft == false).length === 0 ? (
-        <p className="text-gray-400 mb-6">No PRs "ready-for-review" found.</p>
+        <p className="text-gray-600 dark:text-gray-400 mb-6">No PRs "ready-for-review" found.</p>
       ) : (
         <ul className="space-y-4">
           {pullRequests.filter(pr => pr.state == "open" && pr.draft == false).map((pr) => (
             <li
               key={pr.id}
-              className="border border-gray-700 rounded p-4 hover:bg-gray-800 transition cursor-pointer"
+              className="border border-gray-200 dark:border-gray-700 rounded p-4 hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer"
               onClick={() => handleClick(pr)}
             >
               <h3 className="text-lg font-semibold">{pr.title}</h3>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Resource: {pr.resource_type} — Created on {pr.created_at}
               </p>
             </li>
           ))}
         </ul>
       )}
-      <h2 className="text-2xl font-bold mb-2">Your Closed/Merged Pull Requests</h2>
+      <div className="flex items-center gap-3 mb-2">
+        <h2 className="text-2xl font-bold">Your Closed/Merged Pull Requests</h2>
+        <span className="text-sm text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded px-2 py-1">
+          Total created: {totalPrCount ?? 0}
+        </span>
+      </div>
       {pullRequests.filter(pr => pr.state == "closed").length === 0 ? (
-        <p className="text-gray-400 mb-6">No "closed" or "merged" PRs found.</p>
+        <p className="text-gray-600 dark:text-gray-400 mb-6">No "closed" or "merged" PRs found.</p>
       ) : (
         <ul className="space-y-4">
           {pullRequests.filter(pr => pr.state == "closed").map((pr) => (
             <li
               key={pr.id}
-              className="border border-gray-700 rounded p-4 hover:bg-gray-800 transition cursor-pointer"
+              className="border border-gray-200 dark:border-gray-700 rounded p-4 hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer"
               onClick={() => handleClick(pr)}
             >
               <h3 className="text-lg font-semibold">{pr.title}</h3>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Resource: {pr.resource_type} — Created on {pr.created_at}
               </p>
             </li>

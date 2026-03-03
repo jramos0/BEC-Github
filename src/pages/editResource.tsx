@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import yaml from "js-yaml";
 import axios from "axios";
 
+const inputClass = "w-full border border-gray-300 dark:border-gray-600 px-4 py-2 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500";
+
 const EditResource = () => {
   const [resourceCategory, setResourceCategory] = useState("");
   const [url, setUrl] = useState("");
@@ -10,7 +12,7 @@ const EditResource = () => {
   const [parsedData, setParsedData] = useState<Record<string, any>>({});
   const [error, setError] = useState("");
 
-  
+
   const isValidDateString = (str: string) => {
     const d = new Date(str);
     return !isNaN(d.getTime());
@@ -110,24 +112,24 @@ const EditResource = () => {
         if (containsTimeInfo(dateStr)) {
           return (
             <div key={keyPath.join(".")} className="mb-4">
-              <label className="block text-sm text-gray-300 mb-1 capitalize">{key}</label>
+              <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1 capitalize">{key}</label>
               <input
                 type="datetime-local"
                 value={formatDatetimeForInput(dateStr)}
                 onChange={(e) => handleFieldChange(keyPath, e.target.value)}
-                className="w-full border border-gray-300 px-4 py-2 rounded bg-white text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className={inputClass}
               />
             </div>
           );
         } else {
           return (
             <div key={keyPath.join(".")} className="mb-4">
-              <label className="block text-sm text-gray-300 mb-1 capitalize">{key}</label>
+              <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1 capitalize">{key}</label>
               <input
                 type="date"
                 value={formatDateForInput(dateStr)}
                 onChange={(e) => handleFieldChange(keyPath, e.target.value)}
-                className="w-full border border-gray-300 px-4 py-2 rounded bg-white text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className={inputClass}
               />
             </div>
           );
@@ -135,12 +137,12 @@ const EditResource = () => {
       } else {
         return (
           <div key={keyPath.join(".")} className="mb-4">
-            <label className="block text-sm text-gray-300 mb-1 capitalize">{key}</label>
+            <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1 capitalize">{key}</label>
             <input
               type="text"
               value={dateStr}
               onChange={(e) => handleFieldChange(keyPath, e.target.value)}
-              className="w-full border border-gray-300 px-4 py-2 rounded bg-white text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className={inputClass}
             />
           </div>
         );
@@ -148,12 +150,12 @@ const EditResource = () => {
     } else if (typeof value === "number" || typeof value === "boolean") {
       return (
         <div key={keyPath.join(".")} className="mb-4">
-          <label className="block text-sm text-gray-300 mb-1 capitalize">{key}</label>
+          <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1 capitalize">{key}</label>
           <input
             type="text"
             value={String(value)}
             onChange={(e) => handleFieldChange(keyPath, e.target.value)}
-            className="w-full border border-gray-300 px-4 py-2 rounded bg-white text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className={inputClass}
           />
         </div>
       );
@@ -165,14 +167,14 @@ const EditResource = () => {
       if (isPrimitiveArray) {
         return (
           <div key={keyPath.join(".")} className="mb-4">
-            <label className="block text-sm text-gray-300 mb-1 capitalize">{key}</label>
+            <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1 capitalize">{key}</label>
             <textarea
               value={value.join("\n")}
               onChange={(e) => {
                 const updated = e.target.value.split("\n");
                 handleFieldChange(keyPath, updated);
               }}
-              className="w-full border border-gray-300 px-4 py-2 rounded bg-white text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className={inputClass}
               rows={value.length > 0 ? value.length : 3}
             />
           </div>
@@ -180,10 +182,10 @@ const EditResource = () => {
       } else {
         return (
           <div key={keyPath.join(".")} className="mb-4">
-            <label className="block text-sm text-gray-300 mb-1 capitalize">{key}</label>
+            <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1 capitalize">{key}</label>
             <div className="space-y-2">
               {value.map((item, index) => (
-                <div key={`${keyPath.join(".")}-${index}`} className="p-2 border border-gray-300 rounded">
+                <div key={`${keyPath.join(".")}-${index}`} className="p-2 border border-gray-200 dark:border-gray-600 rounded">
                   {typeof item === "object" && item !== null ? (
                     Object.entries(item).map(([childKey, childValue]) =>
                       renderField(childKey, childValue, [...keyPath, index.toString()])
@@ -197,7 +199,7 @@ const EditResource = () => {
                         updated[index] = e.target.value;
                         handleFieldChange(keyPath, updated);
                       }}
-                      className="w-full border border-gray-300 px-4 py-2 rounded bg-white text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      className={inputClass}
                     />
                   )}
                 </div>
@@ -208,8 +210,8 @@ const EditResource = () => {
       }
     } else if (typeof value === "object" && value !== null) {
       return (
-        <div key={keyPath.join(".")} className="mb-6 border border-gray-600 rounded-xl p-4 bg-gray-900 shadow">
-          <h4 className="text-lg font-semibold text-orange-400 mb-4 capitalize">{key}</h4>
+        <div key={keyPath.join(".")} className="mb-6 border border-gray-200 dark:border-gray-600 rounded-xl p-4 bg-gray-50 dark:bg-gray-900 shadow">
+          <h4 className="text-lg font-semibold text-orange-500 dark:text-orange-400 mb-4 capitalize">{key}</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {Object.entries(value).map(([childKey, childValue]) =>
               renderField(childKey, childValue, keyPath)
@@ -264,10 +266,10 @@ const EditResource = () => {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto text-black">
+    <div className="p-6 max-w-4xl mx-auto text-gray-900 dark:text-white">
       <h2 className="text-2xl font-semibold mb-4">Edit resource from URL</h2>
       <input
-        className="w-full border px-4 py-2 mb-4"
+        className={inputClass + " mb-4"}
         type="text"
         placeholder="Paste the url that you want to modify"
         value={url}
@@ -295,7 +297,7 @@ const EditResource = () => {
         </div>
       )}
       {Object.keys(parsedData).length > 0 && (
-        <div className="p-6 max-w-4xl mx-auto text-black">
+        <div className="p-6 max-w-4xl mx-auto">
           <button
             onClick={handleSend}
             className="mt-2 bg-orange-500 text-white px-6 py-2 rounded hover:bg-orange-600 transition"

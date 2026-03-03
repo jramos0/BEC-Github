@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { supportedLanguages } from "../constants/languages";
 import { supportedTags } from "../constants/tags";
 
+const inputClass = "p-3 rounded bg-white border border-gray-300 text-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-white w-full";
+const selectClass = "p-3 rounded bg-white border border-gray-300 text-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-white w-full";
 
 const NewsletterForm = () => {
   const navigate = useNavigate();
@@ -81,7 +83,7 @@ const NewsletterForm = () => {
           type="text"
           name="title"
           placeholder="Newsletter Title"
-          className="p-3 rounded bg-gray-800 text-white w-full"
+          className={inputClass}
           value={formData.title}
           onChange={handleChange}
         />
@@ -89,7 +91,7 @@ const NewsletterForm = () => {
           type="text"
           name="author"
           placeholder="Author"
-          className="p-3 rounded bg-gray-800 text-white w-full"
+          className={inputClass}
           value={formData.author}
           onChange={handleChange}
         />
@@ -98,7 +100,7 @@ const NewsletterForm = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <select
           name="level"
-          className="p-3 rounded bg-gray-800 text-white w-full"
+          className={selectClass}
           value={formData.level}
           onChange={handleChange}
         >
@@ -110,7 +112,7 @@ const NewsletterForm = () => {
         <input
           type="date"
           name="publication_date"
-          className="p-3 rounded bg-gray-800 text-white w-full"
+          className={inputClass}
           value={formData.publication_date}
           onChange={handleChange}
         />
@@ -119,7 +121,7 @@ const NewsletterForm = () => {
           name="language"
           value={formData.language}
           onChange={handleChange}
-          className="p-3 rounded bg-gray-800 text-white w-full"
+          className={selectClass}
         >
           <option value="">Select Language</option>
           {Object.entries(supportedLanguages).map(([code, name]) => (
@@ -128,14 +130,13 @@ const NewsletterForm = () => {
             </option>
           ))}
         </select>
-
       </div>
 
       <input
         type="text"
         name="website"
         placeholder="Website URL"
-        className="p-3 rounded bg-gray-800 text-white w-full"
+        className={inputClass}
         value={formData.website}
         onChange={handleChange}
       />
@@ -143,18 +144,18 @@ const NewsletterForm = () => {
       <textarea
         name="description"
         placeholder="Description"
-        className="p-3 rounded bg-gray-800 text-white w-full"
+        className={inputClass}
         value={formData.description}
         onChange={handleChange}
       />
 
       <div className="flex flex-col gap-2">
-        <label className="text-sm text-gray-400">Tags</label>
+        <label className="text-sm text-gray-600 dark:text-gray-400">Tags</label>
         <div className="flex flex-row gap-4 w-full">
           {formData.tags.map((tag, index) => (
             <select
               key={index}
-              className="p-3 rounded bg-gray-800 text-white flex-1"
+              className={selectClass + " flex-1"}
               value={tag}
               onChange={(e) => handleArrayChange("tags", index, e.target.value)}
             >
@@ -167,25 +168,25 @@ const NewsletterForm = () => {
             </select>
           ))}
         </div>
-        <label className="text-xs text-gray-400"> * Select at least two tags.</label>
+        <label className="text-xs text-gray-500 dark:text-gray-400"> * Select at least two tags.</label>
       </div>
 
       <div className="flex flex-row items-center gap-4">
-        <label className="cursor-pointer bg-gray-800 hover:bg-orange-700 text-white text-sm px-5 py-3 rounded-md transition shadow-md w-full text-center">
-        Upload Thumbnail
-        <input
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) {
-              setFormData((prev) => ({ ...prev, thumbnail: file }));
-            }
-          }}/>
+        <label className="cursor-pointer bg-gray-200 hover:bg-orange-200 text-gray-800 dark:bg-gray-800 dark:hover:bg-orange-700 dark:text-white text-sm px-5 py-3 rounded-md transition shadow-md w-full text-center">
+          Upload Thumbnail
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                setFormData((prev) => ({ ...prev, thumbnail: file }));
+              }
+            }} />
         </label>
         {formData.thumbnail && (
-          <div className="text-green-500 text-xs text-center">
+          <div className="text-green-600 dark:text-green-500 text-xs text-center">
             Selected image: '{formData.thumbnail.name}'
           </div>
         )}

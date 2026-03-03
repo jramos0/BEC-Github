@@ -102,14 +102,14 @@ const Home = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
+      <div className="min-h-screen flex items-center justify-center bg-cream dark:bg-black">
         <LoadingSpinner message="Preparing your session..." />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-cream dark:bg-black text-gray-900 dark:text-white px-4">
       <div className="mb-6">
         <img src={pbnLogo} alt="Plan B Network Logo" className="h-14 w-full" />
       </div>
@@ -151,7 +151,7 @@ const Home = () => {
               <button
                 key={label}
                 onClick={() => navigate(path)}
-                className="bg-gray-800 text-white px-6 py-2 rounded hover:bg-orange-600 transition min-w-[120px] text-sm md:text-base"
+                className="bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white px-6 py-2 rounded hover:bg-orange-600 hover:text-white dark:hover:bg-orange-600 transition min-w-[120px] text-sm md:text-base"
               >
                 {label}
               </button>
@@ -160,7 +160,7 @@ const Home = () => {
 
           <button
             onClick={handleLogout}
-            className="my-6 text-sm underline text-gray-400 hover:text-orange-500"
+            className="my-6 text-sm underline text-gray-500 dark:text-gray-400 hover:text-orange-500 dark:hover:text-orange-500"
           >
             Log out
           </button>
@@ -168,7 +168,7 @@ const Home = () => {
       ) : (
         <button
           onClick={() => navigate('/login')}
-          className="bg-gray-800 px-4 py-2 rounded hover:bg-orange-600 transition"
+          className="bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-2 rounded hover:bg-orange-600 hover:text-white dark:hover:bg-orange-600 transition"
         >
           Sign in
         </button>

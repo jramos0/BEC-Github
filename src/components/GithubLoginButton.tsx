@@ -23,7 +23,7 @@ const GithubLoginButton = () => {
   ) : (
     <button
       onClick={handleLogin}
-      className="w-full flex items-center justify-center gap-2 p-2 bg-gray-800 hover:bg-gray-700 rounded text-white font-semibold transition duration-200"
+      className="w-full flex items-center justify-center gap-2 p-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded font-semibold transition duration-200"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
