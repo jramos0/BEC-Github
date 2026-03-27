@@ -7,7 +7,11 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  background-color: black; /* Asegura el fondo negro en todo el viewport */
+  background-color: #FFF8F0; /* light theme: cream */
+}
+
+html.dark, html.dark body {
+  background-color: #000000; /* dark theme: black */
 }
 
 /* Asegura que todos los contenedores principales ocupen toda la pantalla */

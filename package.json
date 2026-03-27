@@ -10,9 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@uiw/react-markdown-preview": "^5.1.4",
+    "@uiw/react-md-editor": "^4.0.7",
     "axios": "^1.8.3",
+    "markdown-it": "^14.1.0",
     "moment-timezone": "^0.5.47",
     "multer": "1.4.5-lts.2",
+    "nodemon": "^3.1.10",
     "react": "^19.0.0",
     "react-datepicker": "^8.2.1",
     "react-dom": "^19.0.0",
@@ -21,27 +25,33 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/moment-timezone": "^0.5.30",
     "@types/multer": "^1.4.12",
     "@types/react": "^19.0.10",
     "@types/react-datepicker": "^7.0.0",
     "@types/react-dom": "^19.0.4",
     "@types/uuid": "^10.0.0",
+    "@types/yaml": "^1.9.7",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.21.0",
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^15.15.0",
+    "js-yaml": "^4.1.0",
+    "lucide-react": "^0.510.0",
     "postcss": "^8.5.3",
     "tailwindcss": "3.3.3",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.24.1",
-    "vite": "^6.2.0"
+    "vite": "^6.2.0",
+    "yaml": "^2.8.0"
   },
   "pnpm": {
     "ignoredBuiltDependencies": [
       "esbuild"
     ]
-  }
+  },
+  "packageManager": "pnpm@10.12.4"
 }
